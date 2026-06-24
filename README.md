@@ -59,27 +59,31 @@ Agents interact with boards via MCP stdio. This is a separate process from the w
 
 ```json
 {
-  "mcpServers": {
+  "mcp": {
     "sanban": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server", "--mcp-only"]
+      "type": "local",
+      "command": ["sanban", "--mcp-only"],
+      "enabled": true
     }
   }
 }
 ```
 
-Or if installed globally:
+Or running from source:
 
 ```json
 {
-  "mcpServers": {
+  "mcp": {
     "sanban": {
-      "command": "sanban",
-      "args": ["--mcp-only"]
+      "type": "local",
+      "command": ["uv", "run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server", "--mcp-only"],
+      "enabled": true
     }
   }
 }
 ```
+
+> **Other agents:** Adapt the config format for your CLI agent (Claude Desktop, Cursor, etc.). The command is always `sanban --mcp-only` — only the config wrapper changes.
 
 ### Tools
 
