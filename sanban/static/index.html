@@ -231,9 +231,23 @@
   .md-content strong { color: var(--text-0); font-weight: 600; }
   .md-content em { font-style: italic; color: var(--text-1); }
   .md-content code {
-    font-family: var(--font-mono); font-size: 0.9em;
-    background: var(--bg-3); padding: 1px 5px; border-radius: 2px; color: var(--accent);
+    font-family: var(--font-mono); font-size: 0.85em;
+    background: var(--bg-3); padding: 1px 5px; border-radius: 3px; color: var(--accent);
   }
+  .md-content pre {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 12px; margin: 6px 0; overflow-x: auto;
+  }
+  .md-content pre code {
+    background: none; padding: 0; border-radius: 0; color: var(--text-0);
+    font-size: 0.82rem; line-height: 1.5; white-space: pre;
+  }
+  .md-content .kw { color: var(--purple); }
+  .md-content .str { color: var(--green); }
+  .md-content .cmt { color: var(--text-2); font-style: italic; }
+  .md-content .fn { color: var(--accent); }
+  .md-content .num { color: var(--orange); }
+  .md-content .dec { color: var(--yellow); }
   .md-content a { color: var(--accent); text-decoration: none; }
   .md-content a:hover { text-decoration: underline; }
   .md-content ul, .md-content ol {
@@ -245,6 +259,21 @@
     font-size: 0.9rem; font-weight: 600; color: var(--text-0);
     margin: 8px 0 3px;
   }
+
+  /* ── Card Actions ── */
+  .card-actions {
+    display: none; gap: 4px; margin-top: 6px;
+  }
+  .card:hover .card-actions { display: flex; }
+  .card-btn {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    padding: 2px 6px; border-radius: 3px;
+    border: 1px solid var(--border); background: var(--bg-3);
+    color: var(--text-2); cursor: pointer; transition: all 0.12s;
+  }
+  .card-btn:hover { border-color: var(--border-hover); color: var(--text-1); }
+  .card-btn-edit:hover { color: var(--accent); border-color: var(--accent); }
+  .card-btn-delete:hover { color: var(--red); border-color: var(--red); }
 
   /* ── Empty state ── */
   .empty {
@@ -749,10 +778,28 @@ function createCard(item) {
   if (item.description) html += `<div class="detail-section"><div class="detail-label">Description</div><div class="detail-text md-content">${renderMd(item.description)}</div></div>`;
   html += `<div class="detail-section"><div class="detail-label">Meta</div><div class="detail-text">Created: ${item.created_at||'--'}  Updated: ${item.updated_at||'--'}</div></div>`;
   html += `</div>`;
+  html += `<div class="card-actions">
+    <button class="card-btn card-btn-edit" data-action="edit">Edit</button>
+    <button class="card-btn card-btn-delete" data-action="delete">Delete</button>
+  </div>`;
 
   card.innerHTML = html;
-  card.addEventListener('click', () => card.classList.toggle('expanded'));
-  card.addEventListener('dblclick', (e) => { e.preventDefault(); openEditModal(item); });
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.card-actions')) return;
+    card.classList.toggle('expanded');
+  });
+  card.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openEditModal(item);
+  });
+  card.querySelector('[data-action="delete"]').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!confirm(`Delete ${item.id}?`)) return;
+    await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'DELETE' });
+    ITEMS = ITEMS.filter(i => i.id !== item.id);
+    render();
+    toast(`Deleted ${item.id}`);
+  });
   return card;
 }
 
@@ -760,7 +807,17 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 
 function renderMd(text) {
   if (!text) return '';
-  let s = esc(text);
+
+  // extract fenced code blocks first, before any escaping
+  const codeBlocks = [];
+  let s = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const highlighted = lang === 'python' || lang === 'py' ? highlightPython(esc(code)) : esc(code);
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${highlighted}</code></pre>`);
+    return `%%CODEBLOCK${idx}%%`;
+  });
+
+  s = esc(s);
   // inline code (backtick) — must come before bold/italic
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   // bold
@@ -783,7 +840,58 @@ function renderMd(text) {
   s = s.replace(/\n/g, '<br>');
   s = `<p>${s}</p>`;
   s = s.replace(/<p><\/p>/g, '');
+
+  // restore code blocks (%% is safe from esc since it has no HTML special chars)
+  s = s.replace(/%%CODEBLOCK(\d+)%%/g, (_, i) => codeBlocks[parseInt(i)]);
+
   return s;
+}
+
+function highlightPython(code) {
+  // order matters: strings/comments first to avoid inner highlights
+  const tokens = [];
+  let out = code;
+
+  // strings (triple-quoted, double, single)
+  out = out.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"[^"\n]*"|'[^'\n]*")/g, (m) => {
+    const i = tokens.length;
+    tokens.push(`<span class="str">${m}</span>`);
+    return `\x01T${i}\x01`;
+  });
+  // comments
+  out = out.replace(/(#.*)$/gm, (m) => {
+    const i = tokens.length;
+    tokens.push(`<span class="cmt">${m}</span>`);
+    return `\x01T${i}\x01`;
+  });
+  // decorators
+  out = out.replace(/(@\w+)/g, (m) => {
+    const i = tokens.length;
+    tokens.push(`<span class="dec">${m}</span>`);
+    return `\x01T${i}\x01`;
+  });
+  // keywords
+  out = out.replace(/\b(def|class|return|if|elif|else|for|while|import|from|as|try|except|finally|with|yield|raise|pass|break|continue|and|or|not|in|is|None|True|False|lambda|global|nonlocal|assert|del|async|await)\b/g, (m) => {
+    const i = tokens.length;
+    tokens.push(`<span class="kw">${m}</span>`);
+    return `\x01T${i}\x01`;
+  });
+  // function defs
+  out = out.replace(/\b(def\s+)(\w+)/g, (m, kw, name) => {
+    const i = tokens.length;
+    tokens.push(`${kw}<span class="fn">${name}</span>`);
+    return `\x01T${i}\x01`;
+  });
+  // numbers
+  out = out.replace(/\b(\d+\.?\d*)\b/g, (m) => {
+    const i = tokens.length;
+    tokens.push(`<span class="num">${m}</span>`);
+    return `\x01T${i}\x01`;
+  });
+
+  // restore tokens
+  out = out.replace(/\x01T(\d+)\x01/g, (_, i) => tokens[parseInt(i)]);
+  return out;
 }
 
 function updateStats() {
