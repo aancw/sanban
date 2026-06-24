@@ -29,7 +29,7 @@ def main():
         return
 
     # Default: REST + web UI
-    print(f"sanban REST API on http://{args.host}:{args.port}", file=sys.stderr, flush=True)
+    print(f"sanban running on http://localhost:{args.port}", file=sys.stderr, flush=True)
     print(f"Board data in ~/.sanban/boards/", file=sys.stderr, flush=True)
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
