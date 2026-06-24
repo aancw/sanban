@@ -79,6 +79,17 @@ The MCP server exposes tools via stdio transport. Agent config:
 }
 ```
 
+## Frontend
+
+Single-file vanilla HTML/CSS/JS at `static/index.html`. No build step, no framework.
+
+- **Welcome screen**: When no boards exist, a centered card prompts the user to create their first board. Header and board grid are hidden until a board is created.
+- **Board creation**: Uses a custom modal (not browser `prompt()`). The `+ board` button opens the modal; the welcome form also triggers board creation.
+- **Item creation/editing**: Modal overlay with form fields (title, description, status, priority, effort, tags, assignee, due date).
+- **Drag & drop**: Native HTML5 drag-and-drop for moving cards between columns.
+- **Keyboard shortcuts**: `/` search, `n` new item, `e` expand/collapse all, `Esc` close modals.
+- **Styling**: Dark theme via CSS custom properties, Geist font family, `prefers-reduced-motion` respected.
+
 ## Conventions
 
 - Board IDs and item IDs are auto-generated 8-char hex
