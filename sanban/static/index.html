@@ -306,6 +306,95 @@
   ::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
 
+  /* ── Welcome Screen ── */
+  .welcome {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-0);
+    opacity: 0; animation: fadeIn 0.4s ease 0.1s forwards;
+  }
+  .welcome.hidden { display: none; }
+  .welcome-card {
+    width: 420px; max-width: 92vw;
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 36px 32px 32px;
+    opacity: 0; transform: translateY(12px);
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+  }
+  .welcome-logo {
+    font-size: 1.4rem; font-weight: 600; letter-spacing: -0.03em;
+    color: var(--text-0); margin-bottom: 4px;
+  }
+  .welcome-sub {
+    font-size: 0.78rem; color: var(--text-2); line-height: 1.5; margin-bottom: 28px;
+  }
+  .welcome-form { display: flex; flex-direction: column; gap: 14px; }
+  .welcome-field label {
+    display: block; font-family: var(--font-mono); font-size: 0.62rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);
+    margin-bottom: 4px;
+  }
+  .welcome-field input {
+    width: 100%; font-family: var(--font-mono); font-size: 0.8rem;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text-0); padding: 8px 10px; outline: none; transition: border-color 0.15s;
+  }
+  .welcome-field input:focus { border-color: var(--accent); }
+  .welcome-field input::placeholder { color: var(--text-2); }
+  .welcome-create {
+    width: 100%; padding: 9px 16px; border-radius: var(--radius);
+    font-family: var(--font-mono); font-size: 0.78rem; font-weight: 500;
+    background: var(--accent); color: var(--bg-0); border: none;
+    cursor: pointer; transition: opacity 0.12s, transform 0.1s;
+    margin-top: 4px;
+  }
+  .welcome-create:hover { opacity: 0.9; }
+  .welcome-create:active { transform: scale(0.98); }
+  .welcome-create:disabled { opacity: 0.4; cursor: not-allowed; }
+  .welcome-shortcuts {
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-2);
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .welcome-shortcuts kbd {
+    background: var(--bg-3); padding: 1px 4px; border-radius: 2px;
+    border: 1px solid var(--border); font-family: var(--font-mono);
+    font-size: 0.6rem;
+  }
+
+  /* ── Board Create Modal ── */
+  .board-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .board-modal-overlay.open { display: flex; }
+  .board-modal {
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px;
+    width: 380px; max-width: 95vw; padding: 18px;
+    opacity: 0; transform: translateY(8px);
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .board-modal h2 {
+    font-size: 0.85rem; font-weight: 600; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .board-modal label {
+    display: block; font-family: var(--font-mono); font-size: 0.62rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);
+    margin-bottom: 3px; margin-top: 10px;
+  }
+  .board-modal input {
+    width: 100%; font-family: var(--font-mono); font-size: 0.75rem;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-0); padding: 5px 7px; outline: none; transition: border-color 0.15s;
+  }
+  .board-modal input:focus { border-color: var(--accent); }
+  .board-modal input::placeholder { color: var(--text-2); }
+  .board-modal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
   /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -316,6 +405,7 @@
     .board { grid-template-columns: 1fr !important; }
     .header { padding: 8px 12px; }
     .search-wrap input { width: 120px; }
+    .welcome-card { padding: 28px 24px 24px; }
   }
 </style>
 </head>
@@ -396,6 +486,41 @@
   </div>
 </div>
 
+<div class="welcome hidden" id="welcome">
+  <div class="welcome-card">
+    <div class="welcome-logo">sanban</div>
+    <div class="welcome-sub">A lightweight kanban board. Create your first board to get started.</div>
+    <form class="welcome-form" id="welcome-form">
+      <div class="welcome-field">
+        <label>Board name</label>
+        <input type="text" id="welcome-board-name" placeholder="e.g. my-project" autofocus />
+      </div>
+      <button type="submit" class="welcome-create" id="welcome-create">Create board</button>
+    </form>
+    <div class="welcome-shortcuts">
+      <span><kbd>/</kbd> search</span>
+      <span><kbd>n</kbd> new item</span>
+      <span><kbd>e</kbd> expand</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<div class="board-modal-overlay" id="board-modal-overlay">
+  <div class="board-modal">
+    <h2>
+      <span>New Board</span>
+      <button class="btn" id="board-modal-close">&times;</button>
+    </h2>
+    <label>Board name</label>
+    <input type="text" id="board-name-input" placeholder="e.g. my-project" />
+    <div class="board-modal-actions">
+      <button class="btn" id="board-modal-cancel">Cancel</button>
+      <button class="btn btn-accent" id="board-modal-save">Create</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="shortcuts">
   <kbd>/</kbd> search &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>Esc</kbd> close
@@ -426,10 +551,75 @@ async function init() {
     toast('Cannot reach API — run: python -m sanban.server');
     return;
   }
+  if (BOARDS.length === 0) {
+    document.getElementById('welcome').classList.remove('hidden');
+    document.querySelector('.header').style.display = 'none';
+    document.querySelector('.board').style.display = 'none';
+    setupKeyboard();
+    return;
+  }
+  document.getElementById('welcome').classList.add('hidden');
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.board').style.display = '';
   renderBoardPicker();
-  if (BOARDS.length > 0) await selectBoard(BOARDS[0].id);
+  await selectBoard(BOARDS[0].id);
   setupKeyboard();
 }
+
+async function createBoard(name) {
+  const board = await api('/boards', { method: 'POST', body: { name } });
+  BOARDS.push({ id: board.id, name: board.name, columns: board.columns, item_count: 0 });
+  document.getElementById('welcome').classList.add('hidden');
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.board').style.display = '';
+  renderBoardPicker();
+  await selectBoard(board.id);
+  toast(`Created board "${name}"`);
+}
+
+function openBoardModal() {
+  document.getElementById('board-name-input').value = '';
+  document.getElementById('board-modal-overlay').classList.add('open');
+  document.getElementById('board-name-input').focus();
+}
+
+function closeBoardModal() {
+  document.getElementById('board-modal-overlay').classList.remove('open');
+}
+
+document.getElementById('welcome-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('welcome-board-name').value.trim();
+  if (!name) return;
+  const btn = document.getElementById('welcome-create');
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+  try {
+    await createBoard(name);
+  } catch (err) {
+    toast('Failed to create board');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create board';
+  }
+});
+
+document.getElementById('board-modal-save').onclick = async () => {
+  const name = document.getElementById('board-name-input').value.trim();
+  if (!name) { toast('Board name required'); return; }
+  closeBoardModal();
+  await createBoard(name);
+};
+
+document.getElementById('board-modal-close').onclick = closeBoardModal;
+document.getElementById('board-modal-cancel').onclick = closeBoardModal;
+document.getElementById('board-modal-overlay').onclick = (e) => {
+  if (e.target === e.currentTarget) closeBoardModal();
+};
+
+document.getElementById('board-name-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('board-modal-save').click();
+});
 
 function renderBoardPicker() {
   const picker = document.getElementById('board-picker');
@@ -652,7 +842,7 @@ function setupKeyboard() {
   document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-      if (e.key === 'Escape') { e.target.blur(); closeModals(); }
+      if (e.key === 'Escape') { e.target.blur(); closeModals(); closeBoardModal(); }
       return;
     }
     if (e.key === '/') { e.preventDefault(); search.focus(); }
@@ -744,15 +934,7 @@ document.getElementById('modal-delete').onclick = async () => {
 };
 
 // ── New board ──
-document.getElementById('btn-new-board').onclick = async () => {
-  const name = prompt('Board name:');
-  if (!name) return;
-  const board = await api('/boards', { method: 'POST', body: { name } });
-  BOARDS.push({ id: board.id, name: board.name, columns: board.columns, item_count: 0 });
-  renderBoardPicker();
-  await selectBoard(board.id);
-  toast(`Created board "${name}"`);
-};
+document.getElementById('btn-new-board').onclick = openBoardModal;
 
 document.getElementById('btn-new').onclick = openNewModal;
 
