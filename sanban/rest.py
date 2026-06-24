@@ -131,6 +131,6 @@ def api_search(q: str, board_id: str | None = None):
 
 # ── Static files (serve frontend) ──
 
-static_dir = Path(__file__).parent.parent / "static"
+static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
     app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
