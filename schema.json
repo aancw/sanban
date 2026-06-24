@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sanban Board",
+  "type": "object",
+  "required": ["id", "name", "columns", "items"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "columns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["backlog", "in_progress", "done"]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string" },
+          "description": { "type": "string", "default": "" },
+          "priority": { "type": "string", "enum": ["critical", "high", "medium", "low", "none"], "default": "none" },
+          "effort": { "type": "string", "enum": ["XS", "S", "M", "L", "XL", ""], "default": "" },
+          "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+          "assignee": { "type": "string", "default": "" },
+          "due_date": { "type": "string", "default": "" },
+          "sort_order": { "type": "number", "default": 0 },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": "string" },
+          "meta": { "type": "object", "default": {} }
+        }
+      }
+    }
+  }
+}
