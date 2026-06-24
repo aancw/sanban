@@ -12,8 +12,8 @@ Simple kanban that just works. JSON-backed boards with REST API + MCP server.
 ## Quick Start
 
 ```bash
-cd /path/to/sanban
-uv run python -m sanban.server
+uv tool install .
+sanban
 # Open http://localhost:8900
 ```
 
@@ -66,7 +66,7 @@ GET    /api/search?q=               — search across boards
   "mcpServers": {
     "sanban": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server", "--mcp-only"]
+      "args": ["run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server"]
     }
   }
 }

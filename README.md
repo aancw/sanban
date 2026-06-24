@@ -8,7 +8,8 @@ JSON-backed boards with a REST API, MCP server, and a dark UI. For devs who want
 
 ```bash
 uv sync
-uv run python -m sanban.server
+uv tool install .
+sanban
 # Open http://localhost:8900
 ```
 
@@ -45,11 +46,24 @@ uv run python -m sanban.server
 
 ## MCP Server
 
-Expose kanban tools to AI agents via stdio:
+Expose kanban tools to AI agents. Default mode runs both REST + MCP in one process.
 
-```bash
-uv run python -m sanban.server --mcp-only
+### Agent Config
+
+```json
+{
+  "mcpServers": {
+    "sanban": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server"]
+    }
+  }
+}
 ```
+
+No `--mcp-only` needed — the default starts both MCP (stdio) and REST (port 8900).
+
+### Tools
 
 | Tool | Description |
 |------|-------------|
@@ -62,25 +76,13 @@ uv run python -m sanban.server --mcp-only
 | `delete_item(board_id, item_id)` | Remove item |
 | `search(query, board_id?)` | Search across boards |
 
-### Agent Config
-
-```json
-{
-  "mcpServers": {
-    "sanban": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/sanban", "python", "-m", "sanban.server", "--mcp-only"]
-    }
-  }
-}
-```
-
 ## Run Modes
 
 ```bash
-uv run python -m sanban.server              # REST + MCP (default)
-uv run python -m sanban.server --rest-only  # REST only
-uv run python -m sanban.server --mcp-only   # MCP only (stdio)
+sanban                               # both REST + MCP (default)
+sanban --rest-only                   # REST only
+sanban --mcp-only                    # MCP only (stdio)
+sanban --port 9000                   # custom port
 ```
 
 ## Data
