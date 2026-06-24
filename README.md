@@ -4,50 +4,38 @@ Simple kanban that just works. No bloat, no login, no SaaS.
 
 JSON-backed boards with a REST API, MCP server, and a dark UI. For devs who want tasks tracked without the overhead.
 
+## Screenshots
+
+![Welcome](assets/welcome.png)
+![Board](assets/board-with-item.png)
+
 ## Quick Start
 
 ```bash
 uv sync
 uv tool install .
-sanban              # starts web server on http://localhost:8900
+sanban              # http://localhost:8900
 ```
 
 The web server runs independently. Agents connect via MCP separately.
 
-## Screenshots
+## Features
 
-**Welcome screen** — create your first board
-
-![Welcome](assets/welcome.png)
-
-**Empty board** — columns ready for items
-
-![Empty board](assets/board-no-item.png)
-
-**Board with items** — drag-and-drop between columns
-
-![Board with items](assets/board-with-item.png)
-
-**Create item** — modal with all fields
-
-![Create item](assets/create-item.png)
+- Multiple boards with custom columns
+- Drag-and-drop between columns
+- Priority, effort, tags, assignees, due dates
+- Full-text search and filters
+- Markdown in titles and descriptions (code blocks with syntax highlighting)
+- Edit and delete buttons on every card
+- Keyboard shortcuts (`/` search, `n` new, `e` expand)
+- Agent-ready via MCP server
 
 ## Why
 
 - **No database** — one JSON file per board in `~/.sanban/boards/`, easy to diff, commit, back up
 - **No auth** — local-first, runs on localhost
 - **No framework** — vanilla JS frontend, Geist font, dark mode
-- **Agent-ready** — MCP server so AI agents can manage your boards
 - **Multi-board** — one server, unlimited boards
-
-## What You Get
-
-- Multiple boards with custom columns
-- Drag-and-drop between columns
-- Priority, effort, tags, assignees, due dates
-- Full-text search and filters
-- Markdown in titles and descriptions
-- Keyboard shortcuts (`/` search, `n` new, `e` expand)
 
 ## REST API
 
@@ -128,3 +116,7 @@ See [SKILL.md](./SKILL.md) for the full agent reference — API examples, MCP to
 ## Tech
 
 Python 3.10+, FastAPI, uvicorn, MCP SDK. No database, no framework, no build step.
+
+## License
+
+MIT
