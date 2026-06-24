@@ -12,8 +12,10 @@ sanban is a general-purpose kanban board with REST API + MCP server. JSON file s
 | REST API | `sanban/rest.py` (FastAPI) |
 | MCP tools | `sanban/mcp_server.py` (FastMCP, stdio) |
 | Entry point | `sanban/server.py` |
-| Frontend | `static/index.html` |
+| Frontend | `sanban/static/index.html` |
 | Board data | `~/.sanban/boards/<id>.json` |
+| JSON schema | `schema.json` |
+| Package config | `pyproject.toml` |
 
 ## API Base
 
@@ -31,12 +33,44 @@ curl -X POST http://localhost:8900/api/boards \
   -d '{"name":"my-board"}'
 ```
 
+Optional: pass `columns` to customize column names.
+
+```bash
+curl -X POST http://localhost:8900/api/boards \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"my-board","columns":["todo","doing","done"]}'
+```
+
+### List boards
+
+```bash
+curl http://localhost:8900/api/boards
+```
+
+### Get a board with items
+
+```bash
+curl http://localhost:8900/api/boards/<board_id>
+```
+
+### Delete a board
+
+```bash
+curl -X DELETE http://localhost:8900/api/boards/<board_id>
+```
+
 ### Add an item
 
 ```bash
 curl -X POST http://localhost:8900/api/boards/<board_id>/items \
   -H 'Content-Type: application/json' \
   -d '{"title":"Fix bug","priority":"high","effort":"S"}'
+```
+
+### List items (with filters)
+
+```bash
+curl 'http://localhost:8900/api/boards/<board_id>/items?status=in_progress&q=bug&tag=urgent&assignee=alice'
 ```
 
 ### Move an item
@@ -47,10 +81,17 @@ curl -X PATCH http://localhost:8900/api/boards/<board_id>/items/<item_id> \
   -d '{"status":"done"}'
 ```
 
+### Delete an item
+
+```bash
+curl -X DELETE http://localhost:8900/api/boards/<board_id>/items/<item_id>
+```
+
 ### Search
 
 ```bash
 curl 'http://localhost:8900/api/search?q=bug'
+curl 'http://localhost:8900/api/search?q=bug&board_id=<board_id>'
 ```
 
 ## Item Fields
@@ -63,6 +104,10 @@ curl 'http://localhost:8900/api/search?q=bug'
 - `tags` — array of strings
 - `assignee` — string
 - `due_date` — ISO date string
+- `sort_order` — float (default: `0`), controls card ordering within columns
+- `meta` — freeform dict for arbitrary metadata
+- `created_at` — auto-generated ISO 8601 timestamp
+- `updated_at` — auto-updated ISO 8601 timestamp
 
 ## MCP Integration
 
@@ -79,9 +124,35 @@ The MCP server exposes tools via stdio transport. Agent config:
 }
 ```
 
+### MCP Tools
+
+| Tool | Args |
+|------|------|
+| `list_boards` | — |
+| `create_board` | `name`, `columns?` |
+| `get_board` | `board_id` |
+| `create_item` | `board_id`, `title`, `status?`, `description?`, `priority?`, `effort?`, `tags?`, `assignee?`, `due_date?` |
+| `update_item` | `board_id`, `item_id`, + any field |
+| `move_item` | `board_id`, `item_id`, `new_status` |
+| `delete_item` | `board_id`, `item_id` |
+| `search` | `query`, `board_id?` |
+
+## Server CLI
+
+```
+python -m sanban.server [--host HOST] [--port PORT] [--mcp-only] [--rest-only]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--host` | `0.0.0.0` | Bind address |
+| `--port` | `8900` | Listen port |
+| `--mcp-only` | false | Run MCP server only (no REST/UI) |
+| `--rest-only` | false | Run REST server only (no MCP) |
+
 ## Frontend
 
-Single-file vanilla HTML/CSS/JS at `static/index.html`. No build step, no framework.
+Single-file vanilla HTML/CSS/JS at `sanban/static/index.html`. No build step, no framework.
 
 - **Welcome screen**: When no boards exist, a centered card prompts the user to create their first board. Header and board grid are hidden until a board is created.
 - **Board creation**: Uses a custom modal (not browser `prompt()`). The `+ board` button opens the modal; the welcome form also triggers board creation.
