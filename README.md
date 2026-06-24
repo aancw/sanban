@@ -14,6 +14,24 @@ sanban              # starts web server on http://localhost:8900
 
 The web server runs independently. Agents connect via MCP separately.
 
+## Screenshots
+
+**Welcome screen** — create your first board
+
+![Welcome](assets/welcome.png)
+
+**Empty board** — columns ready for items
+
+![Empty board](assets/board-no-item.png)
+
+**Board with items** — drag-and-drop between columns
+
+![Board with items](assets/board-with-item.png)
+
+**Create item** — modal with all fields
+
+![Create item](assets/create-item.png)
+
 ## Why
 
 - **No database** — one JSON file per board in `~/.sanban/boards/`, easy to diff, commit, back up
