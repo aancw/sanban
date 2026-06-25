@@ -192,6 +192,18 @@
   }
   .card-list.drag-over { background: var(--bg-2); }
 
+  /* ── Quick Add ── */
+  .quick-add {
+    padding: 6px 8px; border-top: 1px solid var(--border);
+  }
+  .quick-add-input {
+    width: 100%; font-family: var(--font-mono); font-size: 0.78rem;
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-0); padding: 5px 8px; outline: none; transition: border-color 0.15s;
+  }
+  .quick-add-input:focus { border-color: var(--accent); }
+  .quick-add-input::placeholder { color: var(--text-2); }
+
   /* ── Cards ── */
   .card {
     background: var(--bg-2); border: 1px solid var(--border);
@@ -729,11 +741,15 @@ function buildColumns() {
           <button class="scroll-btn" data-dir="down" title="Scroll down">&#9660;</button>
         </div>
       </div>
-      <div class="card-list" data-status="${col}" id="list-${col}"></div>`;
+      <div class="card-list" data-status="${col}" id="list-${col}"></div>
+      <div class="quick-add">
+        <input class="quick-add-input" type="text" data-status="${col}" placeholder="+ add item..." />
+      </div>`;
     board.appendChild(div);
   }
   setupDragDrop();
   setupScrollButtons();
+  setupQuickAdd();
 }
 
 function updateStatusSelect() {
@@ -995,6 +1011,30 @@ function setupDragDrop() {
         item.status = newStatus;
         render();
         toast(`${id} -> ${newStatus.replace(/_/g, ' ')}`);
+      }
+    });
+  });
+}
+
+// ── Quick Add ──
+function setupQuickAdd() {
+  document.querySelectorAll('.quick-add-input').forEach(input => {
+    input.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const title = input.value.trim();
+        if (!title) return;
+        const status = input.dataset.status;
+        try {
+          const created = await api(`/boards/${CURRENT_BOARD.id}/items`, {
+            method: 'POST',
+            body: { title, status }
+          });
+          ITEMS.push(created);
+          input.value = '';
+          render();
+          toast(`Created ${created.id}`);
+        } catch { toast('Failed to create item'); }
       }
     });
   });
