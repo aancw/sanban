@@ -497,6 +497,9 @@
     <div class="filter-group" data-filter="effort">
       <span class="filter-label">Effort</span>
     </div>
+    <div class="filter-group" data-filter="assignee">
+      <span class="filter-label">Assignee</span>
+    </div>
     <div class="search-wrap">
       <input type="text" id="search" placeholder="search..." />
     </div>
@@ -614,7 +617,7 @@ const API = window.location.origin + '/api';
 let BOARDS = [];
 let CURRENT_BOARD = null;
 let ITEMS = [];
-let ACTIVE_FILTERS = { priority: new Set(), effort: new Set() };
+let ACTIVE_FILTERS = { priority: new Set(), effort: new Set(), assignee: new Set() };
 let SEARCH_Q = '';
 
 async function api(path, opts = {}) {
@@ -770,7 +773,7 @@ function buildFilters() {
   };
   for (const [key, values] of Object.entries(groups)) {
     const container = document.querySelector(`[data-filter="${key}"]`);
-    container.innerHTML = `<span class="filter-label">${key === 'priority' ? 'Pri' : 'Effort'}</span>`;
+    container.innerHTML = `<span class="filter-label">${key === 'priority' ? 'Pri' : key === 'effort' ? 'Effort' : 'Assignee'}</span>`;
     for (const v of values) {
       const chip = document.createElement('button');
       chip.className = 'chip';
@@ -785,11 +788,29 @@ function buildFilters() {
       container.appendChild(chip);
     }
   }
+  // Assignee chips (dynamic from items)
+  const assignees = [...new Set(ITEMS.map(i => i.assignee).filter(Boolean))].sort();
+  const assigneeContainer = document.querySelector('[data-filter="assignee"]');
+  assigneeContainer.innerHTML = '<span class="filter-label">Assignee</span>';
+  for (const v of assignees) {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = v;
+    chip.dataset.value = v;
+    chip.addEventListener('click', () => {
+      const set = ACTIVE_FILTERS.assignee;
+      set.has(v) ? set.delete(v) : set.add(v);
+      chip.classList.toggle('active');
+      render();
+    });
+    assigneeContainer.appendChild(chip);
+  }
 }
 
 function matchesFilters(item) {
   if (ACTIVE_FILTERS.priority.size && !ACTIVE_FILTERS.priority.has(item.priority)) return false;
   if (ACTIVE_FILTERS.effort.size && !ACTIVE_FILTERS.effort.has(item.effort)) return false;
+  if (ACTIVE_FILTERS.assignee.size && !ACTIVE_FILTERS.assignee.has(item.assignee)) return false;
   if (SEARCH_Q) {
     const hay = `${item.id} ${item.title} ${item.description} ${(item.tags||[]).join(' ')} ${item.assignee}`.toLowerCase();
     if (!hay.includes(SEARCH_Q)) return false;
