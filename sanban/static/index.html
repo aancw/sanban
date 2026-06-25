@@ -94,14 +94,21 @@
   .header {
     position: sticky; top: 0; z-index: 40;
     background: var(--bg-0); border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
+    padding: 10px 20px;
   }
-  .header-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .header-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .header-row + .header-row {
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
   .header h1 {
     font-size: 1rem; font-weight: 600; letter-spacing: -0.02em;
     display: flex; align-items: center; gap: 8px;
     color: var(--text-0);
   }
+  .header-spacer { flex: 1; min-width: 8px; }
 
   /* ── Board Picker ── */
   .board-picker {
@@ -520,6 +527,28 @@
   }
   .theme-toggle:hover { border-color: var(--border-hover); color: var(--text-0); }
 
+  /* ── Dropdown Menus ── */
+  .dropdown { position: relative; }
+  .dropdown-menu {
+    display: none; position: absolute; top: calc(100% + 4px); right: 0;
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius);
+    min-width: 180px; padding: 4px; z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .dropdown-menu.open { display: block; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 3px; font-size: 0.82rem;
+    color: var(--text-1); cursor: pointer; transition: background 0.1s;
+    border: none; background: none; width: 100%; text-align: left;
+    font-family: var(--font-mono);
+  }
+  .dropdown-item:hover { background: var(--bg-2); color: var(--text-0); }
+  .dropdown-item.danger { color: var(--red); }
+  .dropdown-item.danger:hover { background: var(--red-dim); }
+  .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .dropdown-icon { width: 14px; text-align: center; flex-shrink: 0; opacity: 0.7; }
+
   /* ── Cross-board Search Modal ── */
   .search-modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.65);
@@ -572,8 +601,10 @@
   @media (max-width: 768px) {
     .board { grid-template-columns: 1fr !important; }
     .header { padding: 8px 12px; }
+    .header-row { gap: 6px; }
     .search-wrap input { width: 120px; }
     .welcome-card { padding: 28px 24px 24px; }
+    .dropdown-menu { right: 0; min-width: 160px; }
   }
 
   /* ── Bulk Operations ── */
@@ -674,38 +705,53 @@
 <body>
 
 <div class="header">
-  <div class="header-top">
+  <div class="header-row">
     <h1>sanban</h1>
     <select class="board-picker" id="board-picker"></select>
     <button class="btn btn-accent" id="btn-new" title="New item (n)">+ item</button>
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
-    <button class="btn btn-danger" id="btn-delete-board" title="Delete current board">delete board</button>
-    <button class="btn" id="btn-rename-board" title="Rename current board">rename</button>
-    <button class="btn" id="btn-manage-cols" title="Manage columns">columns</button>
-    <button class="btn" id="btn-duplicate-board" title="Duplicate board">duplicate</button>
-    <button class="btn" id="btn-history" title="Activity history">history</button>
-    <button class="btn" id="btn-export" title="Export board">export</button>
-    <button class="btn" id="btn-import" title="Import board">import</button>
-    <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
+    <div class="header-spacer"></div>
+    <div class="stats" id="stats"></div>
     <button class="btn" id="btn-search-all" title="Search across boards (Ctrl+K)">&#x1F50D;</button>
     <button class="theme-toggle" id="btn-theme" title="Toggle theme">&#x263E;</button>
-    <div class="stats" id="stats"></div>
   </div>
-  <div class="filters" id="filters">
-    <div class="filter-group" data-filter="priority">
-      <span class="filter-label">Pri</span>
+  <div class="header-row">
+    <div class="filters" id="filters" style="flex:1;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div class="filter-group" data-filter="priority">
+        <span class="filter-label">Pri</span>
+      </div>
+      <div class="filter-group" data-filter="effort">
+        <span class="filter-label">Effort</span>
+      </div>
+      <div class="filter-group" data-filter="assignee">
+        <span class="filter-label">Assignee</span>
+      </div>
+      <div class="filter-group" data-filter="tags">
+        <span class="filter-label">Tags</span>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="search" placeholder="search..." />
+      </div>
     </div>
-    <div class="filter-group" data-filter="effort">
-      <span class="filter-label">Effort</span>
+    <div class="dropdown" id="board-dropdown">
+      <button class="btn" id="btn-board-menu" title="Board actions">board &#x25BE;</button>
+      <div class="dropdown-menu" id="board-menu">
+        <button class="dropdown-item" id="btn-rename-board"><span class="dropdown-icon">&#x270E;</span> Rename board</button>
+        <button class="dropdown-item" id="btn-manage-cols"><span class="dropdown-icon">&#x2630;</span> Manage columns</button>
+        <button class="dropdown-item" id="btn-duplicate-board"><span class="dropdown-icon">&#x2398;</span> Duplicate board</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item danger" id="btn-delete-board"><span class="dropdown-icon">&#x2715;</span> Delete board</button>
+      </div>
     </div>
-    <div class="filter-group" data-filter="assignee">
-      <span class="filter-label">Assignee</span>
-    </div>
-    <div class="filter-group" data-filter="tags">
-      <span class="filter-label">Tags</span>
-    </div>
-    <div class="search-wrap">
-      <input type="text" id="search" placeholder="search..." />
+    <div class="dropdown" id="tools-dropdown">
+      <button class="btn" id="btn-tools-menu" title="Tools">tools &#x25BE;</button>
+      <div class="dropdown-menu" id="tools-menu">
+        <button class="dropdown-item" id="btn-export"><span class="dropdown-icon">&#x21E1;</span> Export</button>
+        <button class="dropdown-item" id="btn-import"><span class="dropdown-icon">&#x21E3;</span> Import</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item" id="btn-history"><span class="dropdown-icon">&#x231A;</span> Activity history</button>
+        <button class="dropdown-item" id="btn-refresh"><span class="dropdown-icon">&#x21BB;</span> Refresh</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2192,6 +2238,30 @@ function setupHashRouting() {
     if (itemId) highlightItem(itemId);
   });
 }
+
+// ── Dropdown Menus ──
+function setupDropdown(triggerId, menuId) {
+  const trigger = document.getElementById(triggerId);
+  const menu = document.getElementById(menuId);
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = menu.classList.contains('open');
+    closeAllDropdowns();
+    if (!wasOpen) menu.classList.add('open');
+  });
+  menu.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      closeAllDropdowns();
+    });
+  });
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+}
+document.addEventListener('click', closeAllDropdowns);
+setupDropdown('btn-board-menu', 'board-menu');
+setupDropdown('btn-tools-menu', 'tools-menu');
 
 // ── Theme Toggle ──
 function getTheme() { return localStorage.getItem('sanban-theme') || 'dark'; }
