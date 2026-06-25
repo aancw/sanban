@@ -110,6 +110,14 @@ def api_list_items(
     return items
 
 
+@app.get("/api/boards/{board_id}/items/{item_id}")
+def api_get_item(board_id: str, item_id: str):
+    item = storage.get_item(board_id, item_id)
+    if not item:
+        raise HTTPException(404, "Item or board not found")
+    return item
+
+
 @app.post("/api/boards/{board_id}/items", status_code=201)
 def api_create_item(board_id: str, body: ItemCreate):
     item = storage.create_item(board_id, body.title, body.status, **body.model_dump(exclude={"title", "status"}))
