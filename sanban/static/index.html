@@ -968,7 +968,12 @@ async function init() {
       return;
     }
   }
-  await selectBoard(BOARDS[0].id);
+  const savedBoard = localStorage.getItem('sanban-board');
+  if (savedBoard && BOARDS.find(b => b.id === savedBoard)) {
+    await selectBoard(savedBoard);
+  } else {
+    await selectBoard(BOARDS[0].id);
+  }
   setupKeyboard();
   setupHashRouting();
 }
@@ -1052,6 +1057,7 @@ async function selectBoard(boardId) {
     render();
     updateStatusSelect();
     window.location.hash = boardId;
+    localStorage.setItem('sanban-board', boardId);
   } catch (err) {
     toast(`Failed to load board: ${err.message}`);
   }
