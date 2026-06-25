@@ -1,3 +1,8 @@
+---
+name: sanban
+description: Simple kanban that just works. JSON-backed boards with REST API + MCP server.
+---
+
 # Skill: sanban
 
 Simple kanban that just works. JSON-backed boards with REST API + MCP server.
