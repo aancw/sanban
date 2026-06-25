@@ -70,6 +70,37 @@ def delete_board(board_id: str) -> str:
 
 
 @mcp.tool()
+def get_item(board_id: str, item_id: str) -> str:
+    """Get a single item's details.
+
+    Args:
+        board_id: Board ID
+        item_id: Item ID
+    """
+    item = storage.get_item(board_id, item_id)
+    if not item:
+        return f"Item '{item_id}' not found on board '{board_id}'."
+    lines = [
+        f"Item: {item['id']}",
+        f"  Title: {item['title']}",
+        f"  Status: {item['status']}",
+        f"  Priority: {item.get('priority', 'none')}",
+        f"  Effort: {item.get('effort', '')}",
+        f"  Tags: {', '.join(item.get('tags', []))}",
+        f"  Assignee: {item.get('assignee', '')}",
+        f"  Due date: {item.get('due_date', '')}",
+        f"  Sort order: {item.get('sort_order', 0)}",
+        f"  Created: {item.get('created_at', '')}",
+        f"  Updated: {item.get('updated_at', '')}",
+    ]
+    if item.get('description'):
+        lines.append(f"  Description: {item['description']}")
+    if item.get('meta'):
+        lines.append(f"  Meta: {item['meta']}")
+    return "\n".join(lines)
+
+
+@mcp.tool()
 def create_item(
     board_id: str,
     title: str,
