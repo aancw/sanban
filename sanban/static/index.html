@@ -459,6 +459,7 @@
     <select class="board-picker" id="board-picker"></select>
     <button class="btn btn-accent" id="btn-new" title="New item (n)">+ item</button>
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
+    <button class="btn btn-danger" id="btn-delete-board" title="Delete current board">delete board</button>
     <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
     <div class="stats" id="stats"></div>
   </div>
@@ -1100,6 +1101,24 @@ async function refreshBoard() {
 
 // ── New board ──
 document.getElementById('btn-new-board').onclick = openBoardModal;
+
+document.getElementById('btn-delete-board').onclick = async () => {
+  if (!CURRENT_BOARD) return;
+  if (!await confirmDialog(`Delete board "${CURRENT_BOARD.name}"? All items will be lost.`)) return;
+  await api(`/boards/${CURRENT_BOARD.id}`, { method: 'DELETE' });
+  BOARDS = BOARDS.filter(b => b.id !== CURRENT_BOARD.id);
+  CURRENT_BOARD = null;
+  ITEMS = [];
+  if (BOARDS.length === 0) {
+    document.getElementById('welcome').classList.remove('hidden');
+    document.querySelector('.header').style.display = 'none';
+    document.querySelector('.board').style.display = 'none';
+  } else {
+    renderBoardPicker();
+    await selectBoard(BOARDS[0].id);
+  }
+  toast('Board deleted');
+};
 
 document.getElementById('btn-new').onclick = openNewModal;
 document.getElementById('btn-refresh').onclick = refreshBoard;
