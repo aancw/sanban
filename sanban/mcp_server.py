@@ -58,6 +58,18 @@ def get_board(board_id: str) -> str:
 
 
 @mcp.tool()
+def delete_board(board_id: str) -> str:
+    """Delete a kanban board and all its items.
+
+    Args:
+        board_id: Board ID
+    """
+    if storage.delete_board(board_id):
+        return f"Deleted board '{board_id}'"
+    return f"Board '{board_id}' not found."
+
+
+@mcp.tool()
 def create_item(
     board_id: str,
     title: str,
