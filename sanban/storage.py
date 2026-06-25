@@ -78,6 +78,15 @@ def delete_board(board_id: str) -> bool:
     return False
 
 
+def rename_board(board_id: str, name: str) -> dict | None:
+    data = _load(board_id)
+    if data is None:
+        return None
+    data["name"] = name
+    _save(board_id, data)
+    return data
+
+
 # ── Items ──
 
 def list_items(board_id: str, status: str | None = None, q: str | None = None,

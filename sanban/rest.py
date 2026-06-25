@@ -29,6 +29,10 @@ class BoardCreate(BaseModel):
     columns: list[str] | None = None
 
 
+class BoardRename(BaseModel):
+    name: str
+
+
 class ItemCreate(BaseModel):
     title: str
     status: str = "backlog"
@@ -80,6 +84,14 @@ def api_delete_board(board_id: str):
     if not storage.delete_board(board_id):
         raise HTTPException(404, "Board not found")
     return {"ok": True}
+
+
+@app.patch("/api/boards/{board_id}")
+def api_rename_board(board_id: str, body: BoardRename):
+    board = storage.rename_board(board_id, body.name)
+    if not board:
+        raise HTTPException(404, "Board not found")
+    return board
 
 
 # ── Item endpoints ──

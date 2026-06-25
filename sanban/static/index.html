@@ -461,6 +461,7 @@
     <button class="btn btn-accent" id="btn-new" title="New item (n)">+ item</button>
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
     <button class="btn btn-danger" id="btn-delete-board" title="Delete current board">delete board</button>
+    <button class="btn" id="btn-rename-board" title="Rename current board">rename</button>
     <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
     <div class="stats" id="stats"></div>
   </div>
@@ -1145,6 +1146,19 @@ document.getElementById('btn-delete-board').onclick = async () => {
     await selectBoard(BOARDS[0].id);
   }
   toast('Board deleted');
+};
+
+document.getElementById('btn-rename-board').onclick = async () => {
+  if (!CURRENT_BOARD) return;
+  const newName = prompt('New board name:', CURRENT_BOARD.name);
+  if (!newName || newName.trim() === '' || newName.trim() === CURRENT_BOARD.name) return;
+  const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { name: newName.trim() } });
+  CURRENT_BOARD.name = updated.name;
+  const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
+  if (b) b.name = updated.name;
+  renderBoardPicker();
+  document.getElementById('board-picker').value = CURRENT_BOARD.id;
+  toast(`Renamed to "${updated.name}"`);
 };
 
 document.getElementById('btn-new').onclick = openNewModal;
