@@ -584,19 +584,6 @@
   }
   .bulk-bar.active { display: flex; }
   .bulk-bar .bulk-count { font-weight: 600; }
-  .card-select {
-    position: absolute; top: 6px; left: 6px;
-    width: 14px; height: 14px; border-radius: 3px;
-    border: 1px solid var(--border-hover); background: transparent;
-    cursor: pointer; transition: all 0.15s; padding: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0; color: transparent;
-  }
-  .card-select:hover { border-color: var(--accent); background: var(--accent-dim); }
-  .card.selected .card-select {
-    border-color: var(--accent); background: var(--accent); color: var(--bg-0);
-    font-size: 0.5rem;
-  }
   .card.selected { border-color: var(--accent); }
 
   /* ── Loading Spinner ── */
@@ -964,6 +951,7 @@ async function init() {
     const [boardId, itemId] = hash.split('/');
     if (boardId && BOARDS.find(b => b.id === boardId)) {
       await selectBoard(boardId);
+      renderBoardPicker();
       if (itemId) highlightItem(itemId);
       return;
     }
@@ -974,6 +962,7 @@ async function init() {
   } else {
     await selectBoard(BOARDS[0].id);
   }
+  renderBoardPicker();
   setupKeyboard();
   setupHashRouting();
 }
@@ -1042,6 +1031,7 @@ function renderBoardPicker() {
     opt.textContent = `${b.name} (${b.item_count})`;
     picker.appendChild(opt);
   }
+  if (CURRENT_BOARD) picker.value = CURRENT_BOARD.id;
   picker.onchange = () => selectBoard(picker.value);
 }
 
@@ -1205,12 +1195,11 @@ function createCard(item) {
   const isDone = item.status === lastCol;
 
   const card = document.createElement('div');
-  card.className = 'card' + (isDone ? ' done' : '') + (SELECTED_ITEMS.has(item.id) ? ' selected' : '');
+  card.className = 'card' + (isDone ? ' done' : '');
   card.draggable = true;
   card.dataset.id = item.id;
 
-  let html = `<button class="card-select" data-action="select" title="Select">${SELECTED_ITEMS.has(item.id) ? '\u2713' : ''}</button>`;
-  html += `<button class="card-check" data-action="check" title="Mark as done">&#x2713;</button>`;
+  let html = `<button class="card-check" data-action="check" title="Mark as done">&#x2713;</button>`;
   html += `<div class="card-id">${item.id}</div><div class="card-title md-content">${renderMd(item.title)}</div><div class="card-meta">`;
   if (pri !== 'none') html += `<span class="badge badge-pri-${pri}">${pri}</span>`;
   if (item.effort) html += `<span class="badge badge-effort-${eff}">${item.effort}</span>`;
@@ -1261,12 +1250,8 @@ function createCard(item) {
   card.innerHTML = html;
   card.addEventListener('click', (e) => {
     if (wasDragging) return;
-    if (e.target.closest('.card-actions') || e.target.closest('.card-select') || e.target.closest('.card-check')) return;
+    if (e.target.closest('.card-actions') || e.target.closest('.card-check')) return;
     card.classList.toggle('expanded');
-  });
-  card.querySelector('[data-action="select"]').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleItemSelect(item.id);
   });
   card.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1901,13 +1886,6 @@ document.getElementById('btn-new').onclick = openNewModal;
 document.getElementById('btn-refresh').onclick = refreshBoard;
 
 // ── Bulk Operations ──
-function toggleItemSelect(id) {
-  if (SELECTED_ITEMS.has(id)) SELECTED_ITEMS.delete(id);
-  else SELECTED_ITEMS.add(id);
-  updateBulkBar();
-  render();
-}
-
 function updateBulkBar() {
   const bar = document.getElementById('bulk-bar');
   const count = SELECTED_ITEMS.size;
