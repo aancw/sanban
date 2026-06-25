@@ -520,6 +520,9 @@
     <div class="filter-group" data-filter="assignee">
       <span class="filter-label">Assignee</span>
     </div>
+    <div class="filter-group" data-filter="tags">
+      <span class="filter-label">Tags</span>
+    </div>
     <div class="search-wrap">
       <input type="text" id="search" placeholder="search..." />
     </div>
@@ -655,7 +658,7 @@ const API = window.location.origin + '/api';
 let BOARDS = [];
 let CURRENT_BOARD = null;
 let ITEMS = [];
-let ACTIVE_FILTERS = { priority: new Set(), effort: new Set(), assignee: new Set() };
+let ACTIVE_FILTERS = { priority: new Set(), effort: new Set(), assignee: new Set(), tags: new Set() };
 let SEARCH_Q = '';
 
 async function api(path, opts = {}) {
@@ -843,12 +846,34 @@ function buildFilters() {
     });
     assigneeContainer.appendChild(chip);
   }
+  // Tag chips (dynamic from items)
+  const allTags = [...new Set(ITEMS.flatMap(i => i.tags || []))].sort();
+  const tagContainer = document.querySelector('[data-filter="tags"]');
+  tagContainer.innerHTML = '<span class="filter-label">Tags</span>';
+  for (const v of allTags) {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = v;
+    chip.dataset.value = v;
+    chip.addEventListener('click', () => {
+      const set = ACTIVE_FILTERS.tags;
+      set.has(v) ? set.delete(v) : set.add(v);
+      chip.classList.toggle('active');
+      render();
+    });
+    tagContainer.appendChild(chip);
+  }
 }
 
 function matchesFilters(item) {
   if (ACTIVE_FILTERS.priority.size && !ACTIVE_FILTERS.priority.has(item.priority)) return false;
   if (ACTIVE_FILTERS.effort.size && !ACTIVE_FILTERS.effort.has(item.effort)) return false;
   if (ACTIVE_FILTERS.assignee.size && !ACTIVE_FILTERS.assignee.has(item.assignee)) return false;
+  if (ACTIVE_FILTERS.tags.size) {
+    const itemTags = new Set(item.tags || []);
+    const hasAny = [...ACTIVE_FILTERS.tags].some(t => itemTags.has(t));
+    if (!hasAny) return false;
+  }
   if (SEARCH_Q) {
     const hay = `${item.id} ${item.title} ${item.description} ${(item.tags||[]).join(' ')} ${item.assignee}`.toLowerCase();
     if (!hay.includes(SEARCH_Q)) return false;
