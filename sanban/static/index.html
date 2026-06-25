@@ -158,9 +158,10 @@
   /* ── Board ── */
   .board {
     display: grid; gap: 1px; background: var(--border);
-    min-height: calc(100dvh - 110px);
+    height: calc(100dvh - 110px);
+    overflow: hidden;
   }
-  .column { background: var(--bg-1); display: flex; flex-direction: column; }
+  .column { background: var(--bg-1); display: flex; flex-direction: column; overflow: hidden; }
   .column-header {
     position: sticky; top: 0; z-index: 10;
     background: var(--bg-1); border-bottom: 1px solid var(--border);
@@ -170,6 +171,16 @@
     font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--text-2); display: flex; align-items: center; gap: 8px;
   }
+  .scroll-btns { display: flex; gap: 2px; }
+  .scroll-btn {
+    width: 22px; height: 22px;
+    font-size: 0.6rem; line-height: 1;
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s; padding: 0;
+  }
+  .scroll-btn:hover { border-color: var(--border-hover); color: var(--text-0); }
+  .scroll-btn:active { transform: scale(0.9); }
   .column-count {
     font-size: 0.7rem; background: var(--bg-3); padding: 2px 6px;
     border-radius: 3px; color: var(--text-2);
@@ -177,7 +188,7 @@
 
   .card-list {
     flex: 1; padding: 8px; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 4px; min-height: 120px;
+    display: flex; flex-direction: column; gap: 4px;
   }
   .card-list.drag-over { background: var(--bg-2); }
 
@@ -711,11 +722,16 @@ function buildColumns() {
     div.innerHTML = `
       <div class="column-header">
         <div class="column-title">${col.replace(/_/g, ' ')} <span class="column-count" id="count-${col}">0</span></div>
+        <div class="scroll-btns">
+          <button class="scroll-btn" data-dir="up" title="Scroll up">&#9650;</button>
+          <button class="scroll-btn" data-dir="down" title="Scroll down">&#9660;</button>
+        </div>
       </div>
       <div class="card-list" data-status="${col}" id="list-${col}"></div>`;
     board.appendChild(div);
   }
   setupDragDrop();
+  setupScrollButtons();
 }
 
 function updateStatusSelect() {
@@ -978,6 +994,19 @@ function setupDragDrop() {
         render();
         toast(`${id} -> ${newStatus.replace(/_/g, ' ')}`);
       }
+    });
+  });
+}
+
+// ── Scroll Buttons ──
+function setupScrollButtons() {
+  document.querySelectorAll('.scroll-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const list = btn.closest('.column').querySelector('.card-list');
+      if (!list) return;
+      const dir = btn.dataset.dir;
+      const amount = dir === 'up' ? -180 : 180;
+      list.scrollBy({ top: amount, behavior: 'smooth' });
     });
   });
 }
