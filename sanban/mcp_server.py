@@ -111,6 +111,8 @@ def create_item(
     tags: list[str] | None = None,
     assignee: str = "",
     due_date: str = "",
+    sort_order: float = 0,
+    meta: dict[str, Any] | None = None,
 ) -> str:
     """Create an item on a board.
 
@@ -124,11 +126,14 @@ def create_item(
         tags: List of tags
         assignee: Assigned person
         due_date: Due date (ISO format)
+        sort_order: Sort order within column (lower = higher)
+        meta: Freeform metadata dict
     """
     item = storage.create_item(
         board_id, title, status,
         description=description, priority=priority, effort=effort,
         tags=tags or [], assignee=assignee, due_date=due_date,
+        sort_order=sort_order, meta=meta or {},
     )
     if not item:
         return f"Board '{board_id}' not found."
@@ -150,7 +155,8 @@ def update_item(board_id: str, item_id: str, **fields: Any) -> str:
         tags: New tags list
         assignee: New assignee
         due_date: New due date
-        sort_order: New sort order
+        sort_order: New sort order (float)
+        meta: New metadata dict
     """
     clean = {k: v for k, v in fields.items() if v is not None and k != "board_id" and k != "item_id"}
     item = storage.update_item(board_id, item_id, **clean)
