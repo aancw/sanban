@@ -226,6 +226,7 @@
   .badge-effort-l { background: var(--orange-dim); color: var(--orange); }
   .badge-effort-xl { background: var(--red-dim); color: var(--red); }
   .badge-due { background: var(--yellow-dim); color: var(--yellow); }
+  .badge-due.overdue { background: var(--red-dim); color: var(--red); }
   .badge-assignee { background: var(--green-dim); color: var(--green); }
 
   .card-detail {
@@ -800,7 +801,10 @@ function createCard(item) {
   if (pri !== 'none') html += `<span class="badge badge-pri-${pri}">${pri}</span>`;
   if (item.effort) html += `<span class="badge badge-effort-${eff}">${item.effort}</span>`;
   for (const t of (item.tags || [])) html += `<span class="badge badge-tag">${esc(t)}</span>`;
-  if (item.due_date) html += `<span class="badge badge-due">${item.due_date}</span>`;
+  if (item.due_date) {
+    const isOverdue = item.status !== lastCol && item.due_date && new Date(item.due_date) < new Date(new Date().toDateString());
+    html += `<span class="badge badge-due${isOverdue ? ' overdue' : ''}">${item.due_date}${isOverdue ? ' !' : ''}</span>`;
+  }
   if (item.assignee) html += `<span class="badge badge-assignee">@${esc(item.assignee)}</span>`;
   html += `</div>`;
   html += `<div class="card-detail">`;
