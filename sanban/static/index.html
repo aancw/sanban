@@ -197,7 +197,18 @@
     color: var(--accent); margin-bottom: 2px;
   }
   .card-title { font-size: 0.9rem; color: var(--text-0); line-height: 1.4; margin-bottom: 6px; }
-  .card-meta { display: flex; gap: 4px; flex-wrap: wrap; }
+  .card-meta { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .card-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--border-hover); background: transparent;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0; color: transparent;
+  }
+  .card-check:hover { border-color: var(--green); background: var(--green-dim); }
+  .card.done .card-check {
+    border-color: var(--green); background: var(--green); color: var(--bg-0); font-size: 0.65rem;
+  }
   .badge {
     font-family: var(--font-mono); font-size: 0.68rem;
     padding: 2px 5px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.04em;
@@ -771,15 +782,18 @@ function render() {
 }
 
 function createCard(item) {
+  const eff = (item.effort || '').toLowerCase();
+  const pri = item.priority || 'none';
+  const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
+  const isDone = item.status === lastCol;
+
   const card = document.createElement('div');
-  card.className = 'card';
+  card.className = 'card' + (isDone ? ' done' : '');
   card.draggable = true;
   card.dataset.id = item.id;
 
-  const eff = (item.effort || '').toLowerCase();
-  const pri = item.priority || 'none';
-
   let html = `<div class="card-id">${item.id}</div><div class="card-title md-content">${renderMd(item.title)}</div><div class="card-meta">`;
+  html += `<button class="card-check" data-action="check" title="Mark as done">&#x2713;</button>`;
   if (pri !== 'none') html += `<span class="badge badge-pri-${pri}">${pri}</span>`;
   if (item.effort) html += `<span class="badge badge-effort-${eff}">${item.effort}</span>`;
   for (const t of (item.tags || [])) html += `<span class="badge badge-tag">${esc(t)}</span>`;
@@ -811,6 +825,15 @@ function createCard(item) {
     ITEMS = ITEMS.filter(i => i.id !== item.id);
     render();
     toast(`Deleted ${item.id}`);
+  });
+  card.querySelector('[data-action="check"]').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (isDone) return;
+    const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
+    await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'PATCH', body: { status: lastCol } });
+    item.status = lastCol;
+    render();
+    toast(`${item.id} -> done`);
   });
   return card;
 }
