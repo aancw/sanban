@@ -204,6 +204,21 @@
   .quick-add-input:focus { border-color: var(--accent); }
   .quick-add-input::placeholder { color: var(--text-2); }
 
+  /* ── Column Manager ── */
+  .col-mgr-list { list-style: none; padding: 0; margin: 12px 0; }
+  .col-mgr-item {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .col-mgr-item input {
+    flex: 1; font-family: var(--font-mono); font-size: 0.85rem;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-0); padding: 5px 8px; outline: none;
+  }
+  .col-mgr-item input:focus { border-color: var(--accent); }
+  .col-mgr-item .btn { flex-shrink: 0; }
+  .col-add-row { display: flex; gap: 6px; margin-top: 10px; }
+  .col-add-row input { flex: 1; }
+
   /* ── Cards ── */
   .card {
     background: var(--bg-2); border: 1px solid var(--border);
@@ -487,6 +502,7 @@
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
     <button class="btn btn-danger" id="btn-delete-board" title="Delete current board">delete board</button>
     <button class="btn" id="btn-rename-board" title="Rename current board">rename</button>
+    <button class="btn" id="btn-manage-cols" title="Manage columns">columns</button>
     <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
     <div class="stats" id="stats"></div>
   </div>
@@ -603,6 +619,24 @@
     <div class="board-modal-actions">
       <button class="btn" id="board-modal-cancel">Cancel</button>
       <button class="btn btn-accent" id="board-modal-save">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="board-modal-overlay" id="col-modal-overlay">
+  <div class="board-modal" style="width:440px">
+    <h2>
+      <span>Manage Columns</span>
+      <button class="btn" id="col-modal-close">&times;</button>
+    </h2>
+    <ul class="col-mgr-list" id="col-mgr-list"></ul>
+    <div class="col-add-row">
+      <input type="text" id="col-add-input" placeholder="New column name..." />
+      <button class="btn btn-accent" id="col-add-btn">Add</button>
+    </div>
+    <div class="board-modal-actions">
+      <button class="btn" id="col-modal-cancel">Cancel</button>
+      <button class="btn btn-accent" id="col-modal-save">Save</button>
     </div>
   </div>
 </div>
@@ -1252,6 +1286,81 @@ document.getElementById('btn-rename-board').onclick = async () => {
   document.getElementById('board-picker').value = CURRENT_BOARD.id;
   toast(`Renamed to "${updated.name}"`);
 };
+
+// ── Column Management ──
+let colDraft = [];
+
+function openColModal() {
+  if (!CURRENT_BOARD) return;
+  colDraft = [...CURRENT_BOARD.columns];
+  renderColList();
+  document.getElementById('col-add-input').value = '';
+  document.getElementById('col-modal-overlay').classList.add('open');
+  document.getElementById('col-add-input').focus();
+}
+
+function closeColModal() {
+  document.getElementById('col-modal-overlay').classList.remove('open');
+}
+
+function renderColList() {
+  const list = document.getElementById('col-mgr-list');
+  list.innerHTML = '';
+  colDraft.forEach((col, i) => {
+    const li = document.createElement('li');
+    li.className = 'col-mgr-item';
+    li.innerHTML = `
+      <input type="text" value="${esc(col)}" data-idx="${i}" />
+      <button class="btn" data-action="up" data-idx="${i}" title="Move up">&#9650;</button>
+      <button class="btn" data-action="down" data-idx="${i}" title="Move down">&#9660;</button>
+      <button class="btn btn-danger" data-action="del" data-idx="${i}" title="Delete">&times;</button>`;
+    list.appendChild(li);
+  });
+  list.querySelectorAll('[data-action="up"]').forEach(btn => {
+    btn.onclick = () => { const i = +btn.dataset.idx; if (i > 0) { [colDraft[i-1], colDraft[i]] = [colDraft[i], colDraft[i-1]]; renderColList(); } };
+  });
+  list.querySelectorAll('[data-action="down"]').forEach(btn => {
+    btn.onclick = () => { const i = +btn.dataset.idx; if (i < colDraft.length - 1) { [colDraft[i], colDraft[i+1]] = [colDraft[i+1], colDraft[i]]; renderColList(); } };
+  });
+  list.querySelectorAll('[data-action="del"]').forEach(btn => {
+    btn.onclick = () => { colDraft.splice(+btn.dataset.idx, 1); renderColList(); };
+  });
+  list.querySelectorAll('input').forEach(inp => {
+    inp.onchange = () => { colDraft[+inp.dataset.idx] = inp.value.trim(); };
+  });
+}
+
+document.getElementById('col-add-btn').onclick = () => {
+  const inp = document.getElementById('col-add-input');
+  const name = inp.value.trim().replace(/\s+/g, '_');
+  if (!name || colDraft.includes(name)) return;
+  colDraft.push(name);
+  inp.value = '';
+  renderColList();
+};
+
+document.getElementById('col-add-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('col-add-btn').click();
+});
+
+document.getElementById('col-modal-save').onclick = async () => {
+  if (!CURRENT_BOARD || !colDraft.length) { toast('Need at least one column'); return; }
+  const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { columns: colDraft } });
+  CURRENT_BOARD.columns = updated.columns;
+  const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
+  if (b) b.columns = updated.columns;
+  buildColumns();
+  buildFilters();
+  render();
+  updateStatusSelect();
+  closeColModal();
+  toast('Columns updated');
+};
+
+document.getElementById('btn-manage-cols').onclick = openColModal;
+document.getElementById('col-modal-close').onclick = closeColModal;
+document.getElementById('col-modal-cancel').onclick = closeColModal;
+document.getElementById('col-modal-overlay').onclick = (e) => { if (e.target === e.currentTarget) closeColModal(); };
 
 document.getElementById('btn-new').onclick = openNewModal;
 document.getElementById('btn-refresh').onclick = refreshBoard;

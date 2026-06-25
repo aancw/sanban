@@ -87,6 +87,15 @@ def rename_board(board_id: str, name: str) -> dict | None:
     return data
 
 
+def update_board_columns(board_id: str, columns: list[str]) -> dict | None:
+    data = _load(board_id)
+    if data is None:
+        return None
+    data["columns"] = columns
+    _save(board_id, data)
+    return data
+
+
 # ── Items ──
 
 def list_items(board_id: str, status: str | None = None, q: str | None = None,

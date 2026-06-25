@@ -30,7 +30,8 @@ class BoardCreate(BaseModel):
 
 
 class BoardRename(BaseModel):
-    name: str
+    name: str | None = None
+    columns: list[str] | None = None
 
 
 class ItemCreate(BaseModel):
@@ -88,9 +89,13 @@ def api_delete_board(board_id: str):
 
 @app.patch("/api/boards/{board_id}")
 def api_rename_board(board_id: str, body: BoardRename):
-    board = storage.rename_board(board_id, body.name)
+    board = storage.get_board(board_id)
     if not board:
         raise HTTPException(404, "Board not found")
+    if body.name is not None:
+        board = storage.rename_board(board_id, body.name)
+    if body.columns is not None:
+        board = storage.update_board_columns(board_id, body.columns)
     return board
 
 
