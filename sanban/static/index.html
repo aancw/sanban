@@ -446,6 +446,7 @@
     <select class="board-picker" id="board-picker"></select>
     <button class="btn btn-accent" id="btn-new" title="New item (n)">+ item</button>
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
+    <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
     <div class="stats" id="stats"></div>
   </div>
   <div class="filters" id="filters">
@@ -563,7 +564,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="shortcuts">
-  <kbd>/</kbd> search &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>Esc</kbd> close
+  <kbd>/</kbd> search &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>r</kbd> refresh &nbsp; <kbd>Esc</kbd> close
 </div>
 
 <script>
@@ -967,6 +968,7 @@ function setupKeyboard() {
     if (e.key === '/') { e.preventDefault(); search.focus(); }
     if (e.key === 'n') { e.preventDefault(); openNewModal(); }
     if (e.key === 'e') { e.preventDefault(); toggleExpandAll(); }
+    if (e.key === 'r') { e.preventDefault(); refreshBoard(); }
   });
 }
 
@@ -1064,10 +1066,18 @@ document.getElementById('modal-delete').onclick = async () => {
   toast(`Deleted ${id}`);
 };
 
+// ── Refresh ──
+async function refreshBoard() {
+  if (!CURRENT_BOARD) return;
+  await selectBoard(CURRENT_BOARD.id);
+  toast('Board refreshed');
+}
+
 // ── New board ──
 document.getElementById('btn-new-board').onclick = openBoardModal;
 
 document.getElementById('btn-new').onclick = openNewModal;
+document.getElementById('btn-refresh').onclick = refreshBoard;
 
 // ── Toast ──
 function toast(msg) {
