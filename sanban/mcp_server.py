@@ -213,5 +213,54 @@ def search(query: str, board_id: str | None = None) -> str:
     return f"Results ({len(results)}):\n" + "\n".join(lines)
 
 
+@mcp.tool()
+def duplicate_board(board_id: str, name: str | None = None) -> str:
+    """Duplicate a board with all its items.
+
+    Args:
+        board_id: Board ID to duplicate
+        name: Optional name for the new board
+    """
+    new_board = storage.duplicate_board(board_id, name)
+    if not new_board:
+        return f"Board '{board_id}' not found."
+    return f"Duplicated board '{new_board['name']}' (id: {new_board['id']})"
+
+
+@mcp.tool()
+def get_history(board_id: str, limit: int = 50) -> str:
+    """Get activity history for a board.
+
+    Args:
+        board_id: Board ID
+        limit: Max entries to return (default 50)
+    """
+    board = storage.get_board(board_id)
+    if not board:
+        return f"Board '{board_id}' not found."
+    history = storage.get_history(board_id, limit)
+    if not history:
+        return "No history found."
+    lines = [f"History for '{board['name']}' ({len(history)} entries):"]
+    for entry in history[-20:]:
+        action = entry.get("action", "")
+        item_id = entry.get("item_id", "")
+        title = entry.get("title", "")
+        ts = entry.get("timestamp", "")
+        if action == "create_item":
+            lines.append(f"  {ts}  Created '{title}' ({item_id})")
+        elif action == "update_item":
+            changes = entry.get("changes", {})
+            fields = ", ".join(changes.keys())
+            lines.append(f"  {ts}  Updated '{title}' ({item_id}): {fields}")
+        elif action == "delete_item":
+            lines.append(f"  {ts}  Deleted '{title}' ({item_id})")
+        else:
+            lines.append(f"  {ts}  {action} '{title}' ({item_id})")
+    if len(history) > 20:
+        lines.append(f"  ... and {len(history) - 20} more entries")
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

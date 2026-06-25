@@ -1,6 +1,7 @@
 """JSON file storage for sanban boards."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import time
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 BOARDS_DIR = Path(os.environ.get("SANBAN_DATA_DIR", Path.home() / ".sanban" / "boards"))
+HISTORY_DIR = Path(os.environ.get("SANBAN_DATA_DIR", Path.home() / ".sanban" / "history"))
 
 
 def _board_path(board_id: str) -> Path:
@@ -33,6 +35,53 @@ def _gen_id() -> str:
 
 def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _history_path(board_id: str) -> Path:
+    return HISTORY_DIR / f"{board_id}.json"
+
+
+def _append_history(board_id: str, entry: dict) -> None:
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    p = _history_path(board_id)
+    history = json.loads(p.read_text()) if p.exists() else []
+    history.append(entry)
+    if len(history) > 500:
+        history = history[-500:]
+    p.write_text(json.dumps(history, indent=2))
+
+
+def get_history(board_id: str, limit: int = 50) -> list[dict]:
+    p = _history_path(board_id)
+    if not p.exists():
+        return []
+    history = json.loads(p.read_text())
+    return history[-limit:]
+
+
+def duplicate_board(board_id: str, name: str | None = None) -> dict | None:
+    data = _load(board_id)
+    if data is None:
+        return None
+    new_id = _gen_id()
+    new_data = copy.deepcopy(data)
+    new_data["id"] = new_id
+    new_data["name"] = name or f"{data['name']} (copy)"
+    old_to_new = {}
+    for item in new_data.get("items", []):
+        old_id = item["id"]
+        item["id"] = _gen_id()
+        old_to_new[old_id] = item["id"]
+        item["created_at"] = _now()
+        item["updated_at"] = _now()
+    for item in new_data.get("items", []):
+        if "dependencies" in item:
+            item["dependencies"] = [old_to_new.get(d, d) for d in item["dependencies"]]
+        if "subtasks" in item:
+            for st in item.get("subtasks", []):
+                st["id"] = _gen_id()
+    _save(new_id, new_data)
+    return new_data
 
 
 # ── Boards ──
@@ -145,9 +194,18 @@ def create_item(board_id: str, title: str, status: str = "backlog", **kwargs) ->
         "created_at": now,
         "updated_at": now,
         "meta": kwargs.get("meta", {}),
+        "subtasks": kwargs.get("subtasks", []),
+        "dependencies": kwargs.get("dependencies", []),
     }
     data["items"].append(item)
     _save(board_id, data)
+    _append_history(board_id, {
+        "action": "create_item",
+        "item_id": item["id"],
+        "title": item["title"],
+        "status": item["status"],
+        "timestamp": now,
+    })
     return item
 
 
@@ -157,11 +215,20 @@ def update_item(board_id: str, item_id: str, **fields) -> dict | None:
         return None
     for item in data["items"]:
         if item["id"] == item_id:
+            changes = {k: v for k, v in fields.items() if v is not None and k in item and item[k] != v}
             for k, v in fields.items():
                 if v is not None:
                     item[k] = v
             item["updated_at"] = _now()
             _save(board_id, data)
+            if changes:
+                _append_history(board_id, {
+                    "action": "update_item",
+                    "item_id": item_id,
+                    "title": item["title"],
+                    "changes": {k: v for k, v in changes.items() if k != "updated_at"},
+                    "timestamp": item["updated_at"],
+                })
             return item
     return None
 
@@ -170,10 +237,24 @@ def delete_item(board_id: str, item_id: str) -> bool:
     data = _load(board_id)
     if data is None:
         return False
+    item_to_delete = None
+    for item in data["items"]:
+        if item["id"] == item_id:
+            item_to_delete = item.copy()
+            break
     before = len(data["items"])
     data["items"] = [i for i in data["items"] if i["id"] != item_id]
     if len(data["items"]) < before:
         _save(board_id, data)
+        if item_to_delete:
+            _append_history(board_id, {
+                "action": "delete_item",
+                "item_id": item_id,
+                "title": item_to_delete.get("title", ""),
+                "status": item_to_delete.get("status", ""),
+                "deleted_item": item_to_delete,
+                "timestamp": _now(),
+            })
         return True
     return False
 

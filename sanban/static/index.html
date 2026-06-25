@@ -61,6 +61,24 @@
     --font-mono: 'Geist Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   }
+  html.light {
+    --bg-0: #fafafa;
+    --bg-1: #ffffff;
+    --bg-2: #f4f4f5;
+    --bg-3: #e4e4e7;
+    --border: #d4d4d8;
+    --border-hover: #a1a1aa;
+    --text-0: #18181b;
+    --text-1: #3f3f46;
+    --text-2: #71717a;
+    --accent-dim: #dbeafe;
+    --green-dim: #dcfce7;
+    --yellow-dim: #fef9c3;
+    --red-dim: #fee2e2;
+    --purple-dim: #f3e8ff;
+    --orange-dim: #ffedd5;
+    --cyan-dim: #cffafe;
+  }
 
   html { font-size: 16px; }
   body {
@@ -374,6 +392,12 @@
     transition: all 0.15s ease; z-index: 100; pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translateY(0); }
+  .toast .undo-btn {
+    margin-left: 10px; font-family: var(--font-mono); font-size: 0.75rem;
+    background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 3px;
+    color: var(--accent); cursor: pointer; padding: 2px 8px;
+  }
+  .toast .undo-btn:hover { background: var(--accent); color: var(--bg-0); }
 
   /* ── Shortcuts ── */
   .shortcuts {
@@ -487,12 +511,176 @@
     *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 
+  /* ── Theme Toggle ── */
+  .theme-toggle {
+    width: 28px; height: 28px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-1); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; padding: 0; transition: all 0.12s;
+  }
+  .theme-toggle:hover { border-color: var(--border-hover); color: var(--text-0); }
+
+  /* ── Cross-board Search Modal ── */
+  .search-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: none; align-items: flex-start; justify-content: center; z-index: 100;
+    padding-top: 15vh;
+  }
+  .search-modal-overlay.open { display: flex; }
+  .search-modal {
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px;
+    width: 560px; max-width: 95vw; max-height: 60vh; display: flex; flex-direction: column;
+    opacity: 0; transform: translateY(-8px);
+    animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes slideDown { to { opacity: 1; transform: translateY(0); } }
+  .search-modal-input {
+    font-family: var(--font-mono); font-size: 0.9rem;
+    background: transparent; border: none; border-bottom: 1px solid var(--border);
+    color: var(--text-0); padding: 14px 16px; outline: none; width: 100%;
+  }
+  .search-modal-input::placeholder { color: var(--text-2); }
+  .search-results {
+    overflow-y: auto; padding: 6px; flex: 1;
+  }
+  .search-result-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 4px; cursor: pointer; transition: background 0.1s;
+  }
+  .search-result-item:hover { background: var(--bg-2); }
+  .search-result-board {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    background: var(--bg-3); padding: 2px 6px; border-radius: 2px;
+    color: var(--text-2); white-space: nowrap;
+  }
+  .search-result-title { font-size: 0.85rem; color: var(--text-0); flex: 1; }
+  .search-result-status {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    color: var(--text-2); text-transform: uppercase;
+  }
+  .search-empty {
+    padding: 24px; text-align: center; color: var(--text-2);
+    font-family: var(--font-mono); font-size: 0.8rem;
+  }
+  .search-hint {
+    padding: 8px 14px; border-top: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-2);
+    display: flex; gap: 12px;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .board { grid-template-columns: 1fr !important; }
     .header { padding: 8px 12px; }
     .search-wrap input { width: 120px; }
     .welcome-card { padding: 28px 24px 24px; }
+  }
+
+  /* ── Bulk Operations ── */
+  .bulk-bar {
+    display: none; align-items: center; gap: 10px; padding: 6px 16px;
+    background: var(--accent-dim); border-bottom: 1px solid var(--accent);
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent);
+  }
+  .bulk-bar.active { display: flex; }
+  .bulk-bar .bulk-count { font-weight: 600; }
+  .card-select {
+    position: absolute; top: 6px; left: 6px;
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1px solid var(--border-hover); background: transparent;
+    cursor: pointer; transition: all 0.15s; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0; color: transparent;
+  }
+  .card-select:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .card.selected .card-select {
+    border-color: var(--accent); background: var(--accent); color: var(--bg-0);
+    font-size: 0.5rem;
+  }
+  .card.selected { border-color: var(--accent); }
+
+  /* ── Loading Spinner ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: var(--text-2); font-family: var(--font-mono); font-size: 0.8rem;
+  }
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.6s linear infinite; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── History Modal ── */
+  .history-list { max-height: 400px; overflow-y: auto; margin-top: 8px; }
+  .history-entry {
+    display: flex; gap: 10px; padding: 6px 0;
+    border-bottom: 1px solid var(--border); font-size: 0.82rem;
+  }
+  .history-ts {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    color: var(--text-2); white-space: nowrap; min-width: 140px;
+  }
+  .history-action { color: var(--text-1); flex: 1; }
+  .history-action .item-id { color: var(--accent); font-family: var(--font-mono); font-size: 0.78rem; }
+  .history-action .field-name { color: var(--purple); font-family: var(--font-mono); font-size: 0.78rem; }
+
+  /* ── Subtask List ── */
+  .subtask-list { margin-top: 4px; }
+  .subtask-item {
+    display: flex; align-items: center; gap: 6px; padding: 3px 0;
+    font-size: 0.82rem;
+  }
+  .subtask-item input[type="checkbox"] {
+    accent-color: var(--accent); cursor: pointer;
+  }
+  .subtask-item.done .subtask-text {
+    text-decoration: line-through; color: var(--text-2);
+  }
+  .subtask-text { flex: 1; color: var(--text-1); }
+  .subtask-del {
+    font-size: 0.7rem; color: var(--text-2); cursor: pointer;
+    background: none; border: none; padding: 0 4px;
+  }
+  .subtask-del:hover { color: var(--red); }
+  .subtask-add {
+    display: flex; gap: 4px; margin-top: 4px;
+  }
+  .subtask-add input {
+    flex: 1; font-family: var(--font-mono); font-size: 0.78rem;
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: 3px;
+    color: var(--text-0); padding: 3px 6px; outline: none;
+  }
+  .subtask-add input:focus { border-color: var(--accent); }
+  .subtask-add .btn { padding: 3px 8px; font-size: 0.72rem; }
+
+  /* ── Dependency Chips ── */
+  .dep-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .dep-chip {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    padding: 2px 6px; border-radius: 3px;
+    background: var(--purple-dim); color: var(--purple);
+    border: 1px solid var(--purple); cursor: pointer;
+  }
+  .dep-chip:hover { background: var(--purple); color: var(--bg-0); }
+  .dep-add { display: flex; gap: 4px; margin-top: 4px; }
+  .dep-add select {
+    flex: 1; font-family: var(--font-mono); font-size: 0.78rem;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-0); padding: 4px 6px; outline: none;
+  }
+  .dep-add .btn { padding: 3px 8px; font-size: 0.72rem; }
+
+  /* ── Import/Export ── */
+  .import-drop {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 24px; text-align: center; color: var(--text-2);
+    font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .import-drop:hover, .import-drop.dragover {
+    border-color: var(--accent); color: var(--accent);
+    background: var(--accent-dim);
   }
 </style>
 </head>
@@ -507,7 +695,13 @@
     <button class="btn btn-danger" id="btn-delete-board" title="Delete current board">delete board</button>
     <button class="btn" id="btn-rename-board" title="Rename current board">rename</button>
     <button class="btn" id="btn-manage-cols" title="Manage columns">columns</button>
+    <button class="btn" id="btn-duplicate-board" title="Duplicate board">duplicate</button>
+    <button class="btn" id="btn-history" title="Activity history">history</button>
+    <button class="btn" id="btn-export" title="Export board">export</button>
+    <button class="btn" id="btn-import" title="Import board">import</button>
     <button class="btn" id="btn-refresh" title="Refresh board (r)">&#x21bb;</button>
+    <button class="btn" id="btn-search-all" title="Search across boards (Ctrl+K)">&#x1F50D;</button>
+    <button class="theme-toggle" id="btn-theme" title="Toggle theme">&#x263E;</button>
     <div class="stats" id="stats"></div>
   </div>
   <div class="filters" id="filters">
@@ -530,6 +724,13 @@
 </div>
 
 <div class="board" id="board"></div>
+
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <button class="btn" id="bulk-move" title="Move selected items">Move to...</button>
+  <button class="btn btn-danger" id="bulk-delete" title="Delete selected items">Delete</button>
+  <button class="btn" id="bulk-clear" title="Clear selection">Clear</button>
+</div>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -576,6 +777,20 @@
     <input type="text" id="edit-assignee" placeholder="name" />
     <label>Due Date</label>
     <input type="date" id="edit-due" />
+    <label>Meta (JSON)</label>
+    <textarea id="edit-meta" rows="2" placeholder='{"key": "value"}'></textarea>
+    <label>Subtasks</label>
+    <div class="subtask-list" id="subtask-list"></div>
+    <div class="subtask-add">
+      <input type="text" id="subtask-input" placeholder="Add subtask..." />
+      <button class="btn btn-accent" id="subtask-add-btn">+</button>
+    </div>
+    <label>Dependencies</label>
+    <div class="dep-chips" id="dep-chips"></div>
+    <div class="dep-add">
+      <select id="dep-select"><option value="">Link item...</option></select>
+      <button class="btn btn-accent" id="dep-add-btn">+</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-danger" id="modal-delete" style="display:none">Delete</button>
       <button class="btn" id="modal-cancel">Cancel</button>
@@ -608,6 +823,7 @@
     </form>
     <div class="welcome-shortcuts">
       <span><kbd>/</kbd> search</span>
+      <span><kbd>Ctrl+K</kbd> all boards</span>
       <span><kbd>n</kbd> new item</span>
       <span><kbd>e</kbd> expand</span>
       <span><kbd>Esc</kbd> close</span>
@@ -648,9 +864,51 @@
   </div>
 </div>
 
+<div class="search-modal-overlay" id="search-modal-overlay">
+  <div class="search-modal">
+    <input type="text" class="search-modal-input" id="search-modal-input" placeholder="Search across all boards..." />
+    <div class="search-results" id="search-results"></div>
+    <div class="search-hint">
+      <span><kbd>Esc</kbd> close</span>
+      <span><kbd>&#x21B5;</kbd> open item</span>
+    </div>
+  </div>
+</div>
+
+<div class="board-modal-overlay" id="history-modal-overlay">
+  <div class="board-modal" style="width:520px">
+    <h2>
+      <span>Activity History</span>
+      <button class="btn" id="history-modal-close">&times;</button>
+    </h2>
+    <div class="history-list" id="history-list"></div>
+    <div class="board-modal-actions">
+      <button class="btn" id="history-modal-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="board-modal-overlay" id="import-modal-overlay">
+  <div class="board-modal" style="width:480px">
+    <h2>
+      <span>Import Board</span>
+      <button class="btn" id="import-modal-close">&times;</button>
+    </h2>
+    <div class="import-drop" id="import-drop">
+      Drop JSON/CSV file here or click to select
+      <input type="file" id="import-file" accept=".json,.csv" style="display:none" />
+    </div>
+    <div id="import-preview" style="display:none;margin-top:12px;font-family:var(--font-mono);font-size:0.8rem;color:var(--text-1)"></div>
+    <div class="board-modal-actions">
+      <button class="btn" id="import-modal-cancel">Cancel</button>
+      <button class="btn btn-accent" id="import-modal-confirm" style="display:none">Import</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="shortcuts">
-  <kbd>/</kbd> search &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>r</kbd> refresh &nbsp; <kbd>Esc</kbd> close
+  <kbd>/</kbd> search &nbsp; <kbd>Ctrl+K</kbd> all boards &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>r</kbd> refresh &nbsp; <kbd>Esc</kbd> close
 </div>
 
 <script>
@@ -660,6 +918,10 @@ let CURRENT_BOARD = null;
 let ITEMS = [];
 let ACTIVE_FILTERS = { priority: new Set(), effort: new Set(), assignee: new Set(), tags: new Set() };
 let SEARCH_Q = '';
+let SELECTED_ITEMS = new Set();
+let UNDO_STACK = [];
+let CURRENT_SUBTASKS = [];
+let CURRENT_DEPS = [];
 
 async function api(path, opts = {}) {
   const res = await fetch(API + path, {
@@ -667,14 +929,21 @@ async function api(path, opts = {}) {
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`${res.status}: ${text}`);
+  }
   return res.json();
+}
+
+function showLoading(container) {
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
 }
 
 async function init() {
   try {
     BOARDS = await api('/boards');
-  } catch {
+  } catch (err) {
     toast('Cannot reach API — run: python -m sanban.server');
     return;
   }
@@ -683,14 +952,25 @@ async function init() {
     document.querySelector('.header').style.display = 'none';
     document.querySelector('.board').style.display = 'none';
     setupKeyboard();
+    setupHashRouting();
     return;
   }
   document.getElementById('welcome').classList.add('hidden');
   document.querySelector('.header').style.display = '';
   document.querySelector('.board').style.display = '';
   renderBoardPicker();
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const [boardId, itemId] = hash.split('/');
+    if (boardId && BOARDS.find(b => b.id === boardId)) {
+      await selectBoard(boardId);
+      if (itemId) highlightItem(itemId);
+      return;
+    }
+  }
   await selectBoard(BOARDS[0].id);
   setupKeyboard();
+  setupHashRouting();
 }
 
 async function createBoard(name) {
@@ -761,12 +1041,20 @@ function renderBoardPicker() {
 }
 
 async function selectBoard(boardId) {
-  CURRENT_BOARD = await api(`/boards/${boardId}`);
-  ITEMS = CURRENT_BOARD.items;
-  buildColumns();
-  buildFilters();
-  render();
-  updateStatusSelect();
+  showLoading(document.getElementById('board'));
+  try {
+    CURRENT_BOARD = await api(`/boards/${boardId}`);
+    ITEMS = CURRENT_BOARD.items;
+    SELECTED_ITEMS.clear();
+    updateBulkBar();
+    buildColumns();
+    buildFilters();
+    render();
+    updateStatusSelect();
+    window.location.hash = boardId;
+  } catch (err) {
+    toast(`Failed to load board: ${err.message}`);
+  }
 }
 
 function buildColumns() {
@@ -829,7 +1117,6 @@ function buildFilters() {
       container.appendChild(chip);
     }
   }
-  // Assignee chips (dynamic from items)
   const assignees = [...new Set(ITEMS.map(i => i.assignee).filter(Boolean))].sort();
   const assigneeContainer = document.querySelector('[data-filter="assignee"]');
   assigneeContainer.innerHTML = '<span class="filter-label">Assignee</span>';
@@ -846,7 +1133,6 @@ function buildFilters() {
     });
     assigneeContainer.appendChild(chip);
   }
-  // Tag chips (dynamic from items)
   const allTags = [...new Set(ITEMS.flatMap(i => i.tags || []))].sort();
   const tagContainer = document.querySelector('[data-filter="tags"]');
   tagContainer.innerHTML = '<span class="filter-label">Tags</span>';
@@ -913,11 +1199,12 @@ function createCard(item) {
   const isDone = item.status === lastCol;
 
   const card = document.createElement('div');
-  card.className = 'card' + (isDone ? ' done' : '');
+  card.className = 'card' + (isDone ? ' done' : '') + (SELECTED_ITEMS.has(item.id) ? ' selected' : '');
   card.draggable = true;
   card.dataset.id = item.id;
 
-  let html = `<button class="card-check" data-action="check" title="Mark as done">&#x2713;</button>`;
+  let html = `<button class="card-select" data-action="select" title="Select">${SELECTED_ITEMS.has(item.id) ? '\u2713' : ''}</button>`;
+  html += `<button class="card-check" data-action="check" title="Mark as done">&#x2713;</button>`;
   html += `<div class="card-id">${item.id}</div><div class="card-title md-content">${renderMd(item.title)}</div><div class="card-meta">`;
   if (pri !== 'none') html += `<span class="badge badge-pri-${pri}">${pri}</span>`;
   if (item.effort) html += `<span class="badge badge-effort-${eff}">${item.effort}</span>`;
@@ -927,10 +1214,38 @@ function createCard(item) {
     html += `<span class="badge badge-due${isOverdue ? ' overdue' : ''}">${item.due_date}${isOverdue ? ' !' : ''}</span>`;
   }
   if (item.assignee) html += `<span class="badge badge-assignee">@${esc(item.assignee)}</span>`;
+  if (item.subtasks && item.subtasks.length) {
+    const done = item.subtasks.filter(s => s.done).length;
+    html += `<span class="badge badge-tag">${done}/${item.subtasks.length} subtasks</span>`;
+  }
+  if (item.dependencies && item.dependencies.length) {
+    html += `<span class="badge" style="background:var(--purple-dim);color:var(--purple)">${item.dependencies.length} deps</span>`;
+  }
   html += `</div>`;
   html += `<div class="card-detail">`;
   if (item.description) html += `<div class="detail-section"><div class="detail-label">Description</div><div class="detail-text md-content">${renderMd(item.description)}</div></div>`;
-  html += `<div class="detail-section"><div class="detail-label">Meta</div><div class="detail-text">Created: ${item.created_at||'--'}  Updated: ${item.updated_at||'--'}</div></div>`;
+  if (item.subtasks && item.subtasks.length) {
+    html += `<div class="detail-section"><div class="detail-label">Subtasks</div><div class="subtask-list">`;
+    for (const st of item.subtasks) {
+      html += `<div class="subtask-item${st.done ? ' done' : ''}"><input type="checkbox" ${st.done ? 'checked' : ''} data-subtask-id="${st.id}" /><span class="subtask-text">${esc(st.text)}</span></div>`;
+    }
+    html += `</div></div>`;
+  }
+  if (item.dependencies && item.dependencies.length) {
+    html += `<div class="detail-section"><div class="detail-label">Dependencies</div><div class="dep-chips">`;
+    for (const depId of item.dependencies) {
+      const depItem = ITEMS.find(i => i.id === depId);
+      html += `<span class="dep-chip" title="${depItem ? depItem.title : depId}">${depId}</span>`;
+    }
+    html += `</div></div>`;
+  }
+  const metaEntries = Object.entries(item.meta || {});
+  if (metaEntries.length) {
+    html += `<div class="detail-section"><div class="detail-label">Meta</div><div class="detail-text" style="font-family:var(--font-mono);font-size:0.78rem">`;
+    for (const [k, v] of metaEntries) html += `${esc(k)}: ${esc(String(v))}<br>`;
+    html += `</div></div>`;
+  }
+  html += `<div class="detail-section"><div class="detail-label">Info</div><div class="detail-text">Created: ${item.created_at||'--'}  Updated: ${item.updated_at||'--'}</div></div>`;
   html += `</div>`;
   html += `<div class="card-actions">
     <button class="card-btn card-btn-edit" data-action="edit">Edit</button>
@@ -939,8 +1254,13 @@ function createCard(item) {
 
   card.innerHTML = html;
   card.addEventListener('click', (e) => {
-    if (e.target.closest('.card-actions')) return;
+    if (wasDragging) return;
+    if (e.target.closest('.card-actions') || e.target.closest('.card-select') || e.target.closest('.card-check')) return;
     card.classList.toggle('expanded');
+  });
+  card.querySelector('[data-action="select"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleItemSelect(item.id);
   });
   card.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -949,19 +1269,38 @@ function createCard(item) {
   card.querySelector('[data-action="delete"]').addEventListener('click', async (e) => {
     e.stopPropagation();
     if (!await confirmDialog(`Delete ${item.title || item.id}?`)) return;
+    const deleted = { ...item };
     await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'DELETE' });
     ITEMS = ITEMS.filter(i => i.id !== item.id);
+    SELECTED_ITEMS.delete(item.id);
+    updateBulkBar();
     render();
+    pushUndo({ action: 'delete', item: deleted });
     toast(`Deleted ${item.id}`);
   });
   card.querySelector('[data-action="check"]').addEventListener('click', async (e) => {
     e.stopPropagation();
     if (isDone) return;
     const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
+    const oldStatus = item.status;
     await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'PATCH', body: { status: lastCol } });
     item.status = lastCol;
     render();
+    pushUndo({ action: 'move', itemId: item.id, from: oldStatus, to: lastCol });
     toast(`${item.id} -> done`);
+  });
+  // Subtask checkbox handlers
+  card.querySelectorAll('[data-subtask-id]').forEach(cb => {
+    cb.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const stId = cb.dataset.subtaskId;
+      const st = item.subtasks.find(s => s.id === stId);
+      if (st) {
+        st.done = cb.checked;
+        await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'PATCH', body: { subtasks: item.subtasks } });
+        render();
+      }
+    });
   });
   return card;
 }
@@ -970,8 +1309,6 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 
 function renderMd(text) {
   if (!text) return '';
-
-  // extract fenced code blocks first, before any escaping
   const codeBlocks = [];
   let s = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
     const highlighted = !lang || lang === 'python' || lang === 'py' ? highlightPython(esc(code)) : esc(code);
@@ -979,80 +1316,59 @@ function renderMd(text) {
     codeBlocks.push(`<pre><code class="language-${lang || 'text'}">${highlighted}</code></pre>`);
     return `%%CODEBLOCK${idx}%%`;
   });
-
   s = esc(s);
-  // inline code (backtick) — must come before bold/italic
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // bold
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // italic
   s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // links [text](url)
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  // headings
   s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
   s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-  // unordered lists
   s = s.replace(/^(?:- (.+)\n?)+/gm, (block) => {
     const items = block.trim().split('\n').map(l => `<li>${l.replace(/^- /, '')}</li>`).join('');
     return `<ul>${items}</ul>`;
   });
-  // line breaks (double newline → paragraph, single → br)
   s = s.replace(/\n\n/g, '</p><p>');
   s = s.replace(/\n/g, '<br>');
   s = `<p>${s}</p>`;
   s = s.replace(/<p><\/p>/g, '');
-
-  // restore code blocks (%% is safe from esc since it has no HTML special chars)
   s = s.replace(/%%CODEBLOCK(\d+)%%/g, (_, i) => codeBlocks[parseInt(i)]);
-
   return s;
 }
 
 function highlightPython(code) {
-  // order matters: strings/comments first to avoid inner highlights
   const tokens = [];
   let out = code;
-
-  // strings (triple-quoted, double, single)
   out = out.replace(/("""[\s\S]*?"""|'''[\s\S]*?'''|"[^"\n]*"|'[^'\n]*")/g, (m) => {
     const i = tokens.length;
     tokens.push(`<span class="str">${m}</span>`);
     return `\x01T${i}\x01`;
   });
-  // comments
   out = out.replace(/(#.*)$/gm, (m) => {
     const i = tokens.length;
     tokens.push(`<span class="cmt">${m}</span>`);
     return `\x01T${i}\x01`;
   });
-  // decorators
   out = out.replace(/(@\w+)/g, (m) => {
     const i = tokens.length;
     tokens.push(`<span class="dec">${m}</span>`);
     return `\x01T${i}\x01`;
   });
-  // keywords
   out = out.replace(/\b(def|class|return|if|elif|else|for|while|import|from|as|try|except|finally|with|yield|raise|pass|break|continue|and|or|not|in|is|None|True|False|lambda|global|nonlocal|assert|del|async|await)\b/g, (m) => {
     const i = tokens.length;
     tokens.push(`<span class="kw">${m}</span>`);
     return `\x01T${i}\x01`;
   });
-  // function defs
   out = out.replace(/\b(def\s+)(\w+)/g, (m, kw, name) => {
     const i = tokens.length;
     tokens.push(`${kw}<span class="fn">${name}</span>`);
     return `\x01T${i}\x01`;
   });
-  // numbers
   out = out.replace(/\b(\d+\.?\d*)\b/g, (m) => {
     const i = tokens.length;
     tokens.push(`<span class="num">${m}</span>`);
     return `\x01T${i}\x01`;
   });
-
-  // restore tokens
   out = out.replace(/\x01T(\d+)\x01/g, (_, i) => tokens[parseInt(i)]);
   return out;
 }
@@ -1062,10 +1378,22 @@ function updateStats() {
   const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
   const done = ITEMS.filter(i => i.status === lastCol).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
+  const assigneeCounts = {};
+  for (const item of ITEMS) {
+    const a = item.assignee || 'unassigned';
+    assigneeCounts[a] = (assigneeCounts[a] || 0) + 1;
+  }
+  let assigneeHtml = '';
+  const entries = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1]);
+  for (const [name, count] of entries.slice(0, 3)) {
+    assigneeHtml += `<span>@${esc(name)}: <span class="num">${count}</span></span>`;
+  }
+  if (entries.length > 3) assigneeHtml += `<span>+${entries.length - 3} more</span>`;
   document.getElementById('stats').innerHTML = `
     <span><span class="num">${total}</span> total</span>
     <span><span class="num">${done}</span> done</span>
-    <span class="pct">${pct}%</span>`;
+    <span class="pct">${pct}%</span>
+    ${assigneeHtml}`;
 }
 
 // ── Drag & Drop ──
@@ -1095,10 +1423,8 @@ function setupDragDrop() {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       list.classList.add('drag-over');
-      // Remove old indicator
       const oldInd = list.querySelector('.drop-indicator');
       if (oldInd) oldInd.remove();
-      // Find nearest card and insert indicator
       const cards = [...list.querySelectorAll('.card:not(.dragging)')];
       let insertBefore = null;
       for (const c of cards) {
@@ -1126,19 +1452,13 @@ function setupDragDrop() {
       const newStatus = list.dataset.status;
       const item = ITEMS.find(i => i.id === id);
       if (!item) return;
-
-      // Find drop position
       const cards = [...list.querySelectorAll('.card:not(.dragging)')];
       let insertIdx = cards.length;
       for (let i = 0; i < cards.length; i++) {
         const rect = cards[i].getBoundingClientRect();
         if (e.clientY < rect.top + rect.height / 2) { insertIdx = i; break; }
       }
-
-      // Get visible items in target column
       const targetItems = ITEMS.filter(i => i._visible && i.status === newStatus && i.id !== id);
-
-      // Calculate new sort_order
       let newSortOrder;
       if (targetItems.length === 0) {
         newSortOrder = 0;
@@ -1149,16 +1469,18 @@ function setupDragDrop() {
       } else {
         newSortOrder = ((targetItems[insertIdx - 1].sort_order || 0) + (targetItems[insertIdx].sort_order || 0)) / 2;
       }
-
       const patchBody = {};
+      const oldStatus = item.status;
       if (item.status !== newStatus) patchBody.status = newStatus;
       patchBody.sort_order = newSortOrder;
-
       await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'PATCH', body: patchBody });
       item.status = newStatus;
       item.sort_order = newSortOrder;
       render();
-      if (item.status !== newStatus) toast(`${id} -> ${newStatus.replace(/_/g, ' ')}`);
+      if (oldStatus !== newStatus) {
+        pushUndo({ action: 'move', itemId: id, from: oldStatus, to: newStatus });
+        toast(`${id} -> ${newStatus.replace(/_/g, ' ')}`);
+      }
     });
   });
 }
@@ -1181,7 +1503,7 @@ function setupQuickAdd() {
           input.value = '';
           render();
           toast(`Created ${created.id}`);
-        } catch { toast('Failed to create item'); }
+        } catch (err) { toast(`Failed: ${err.message}`); }
       }
     });
   });
@@ -1212,13 +1534,15 @@ function setupKeyboard() {
   document.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-      if (e.key === 'Escape') { e.target.blur(); closeModals(); closeBoardModal(); }
+      if (e.key === 'Escape') { e.target.blur(); closeModals(); closeBoardModal(); closeSearchModal(); closeHistoryModal(); closeImportModal(); }
       return;
     }
     if (e.key === '/') { e.preventDefault(); search.focus(); }
     if (e.key === 'n') { e.preventDefault(); openNewModal(); }
     if (e.key === 'e') { e.preventDefault(); toggleExpandAll(); }
     if (e.key === 'r') { e.preventDefault(); refreshBoard(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearchModal(); }
+    if (e.key === 'z' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); performUndo(); }
   });
 }
 
@@ -1240,6 +1564,11 @@ function openNewModal() {
   document.getElementById('edit-tags').value = '';
   document.getElementById('edit-assignee').value = '';
   document.getElementById('edit-due').value = '';
+  document.getElementById('edit-meta').value = '';
+  CURRENT_SUBTASKS = [];
+  CURRENT_DEPS = [];
+  renderSubtasks();
+  renderDeps();
   document.getElementById('modal-delete').style.display = 'none';
   document.getElementById('md-preview').style.display = 'none';
   document.getElementById('edit-desc').style.display = '';
@@ -1259,6 +1588,12 @@ function openEditModal(item) {
   document.getElementById('edit-tags').value = (item.tags || []).join(', ');
   document.getElementById('edit-assignee').value = item.assignee || '';
   document.getElementById('edit-due').value = item.due_date || '';
+  document.getElementById('edit-meta').value = item.meta ? JSON.stringify(item.meta, null, 2) : '';
+  CURRENT_SUBTASKS = (item.subtasks || []).map(s => ({ ...s }));
+  CURRENT_DEPS = [...(item.dependencies || [])];
+  renderSubtasks();
+  renderDeps();
+  renderDepSelect(item.id);
   document.getElementById('modal-delete').style.display = '';
   document.getElementById('md-preview').style.display = 'none';
   document.getElementById('edit-desc').style.display = '';
@@ -1303,6 +1638,11 @@ document.getElementById('md-preview-toggle').onclick = () => {
 
 document.getElementById('modal-save').onclick = async () => {
   const id = document.getElementById('edit-id').value;
+  let meta = {};
+  try {
+    const metaStr = document.getElementById('edit-meta').value.trim();
+    if (metaStr) meta = JSON.parse(metaStr);
+  } catch { toast('Invalid JSON in meta field'); return; }
   const data = {
     title: document.getElementById('edit-title').value.trim(),
     description: document.getElementById('edit-desc').value.trim(),
@@ -1312,17 +1652,24 @@ document.getElementById('modal-save').onclick = async () => {
     tags: document.getElementById('edit-tags').value.split(',').map(s => s.trim()).filter(Boolean),
     assignee: document.getElementById('edit-assignee').value.trim(),
     due_date: document.getElementById('edit-due').value,
+    meta,
+    subtasks: CURRENT_SUBTASKS,
+    dependencies: CURRENT_DEPS,
   };
   if (!data.title) { toast('Title required'); return; }
   if (id) {
-    const updated = await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'PATCH', body: data });
-    const idx = ITEMS.findIndex(i => i.id === id);
-    if (idx >= 0) ITEMS[idx] = updated;
-    toast(`Updated ${id}`);
+    try {
+      const updated = await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'PATCH', body: data });
+      const idx = ITEMS.findIndex(i => i.id === id);
+      if (idx >= 0) ITEMS[idx] = updated;
+      toast(`Updated ${id}`);
+    } catch (err) { toast(`Failed: ${err.message}`); return; }
   } else {
-    const created = await api(`/boards/${CURRENT_BOARD.id}/items`, { method: 'POST', body: data });
-    ITEMS.push(created);
-    toast(`Created ${created.id}`);
+    try {
+      const created = await api(`/boards/${CURRENT_BOARD.id}/items`, { method: 'POST', body: data });
+      ITEMS.push(created);
+      toast(`Created ${created.id}`);
+    } catch (err) { toast(`Failed: ${err.message}`); return; }
   }
   closeModals();
   render();
@@ -1331,11 +1678,86 @@ document.getElementById('modal-save').onclick = async () => {
 document.getElementById('modal-delete').onclick = async () => {
   const id = document.getElementById('edit-id').value;
   if (!id || !await confirmDialog(`Delete ${id}?`)) return;
+  const deleted = ITEMS.find(i => i.id === id);
   await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'DELETE' });
   ITEMS = ITEMS.filter(i => i.id !== id);
   closeModals();
   render();
+  pushUndo({ action: 'delete', item: deleted });
   toast(`Deleted ${id}`);
+};
+
+// ── Subtasks ──
+function renderSubtasks() {
+  const list = document.getElementById('subtask-list');
+  list.innerHTML = '';
+  for (const st of CURRENT_SUBTASKS) {
+    const div = document.createElement('div');
+    div.className = 'subtask-item' + (st.done ? ' done' : '');
+    div.innerHTML = `<input type="checkbox" ${st.done ? 'checked' : ''} data-st-id="${st.id}" /><span class="subtask-text">${esc(st.text)}</span><button class="subtask-del" data-st-del="${st.id}">&times;</button>`;
+    div.querySelector('[data-st-id]').addEventListener('change', (e) => {
+      st.done = e.target.checked;
+      div.classList.toggle('done', st.done);
+    });
+    div.querySelector('[data-st-del]').addEventListener('click', () => {
+      CURRENT_SUBTASKS = CURRENT_SUBTASKS.filter(s => s.id !== st.id);
+      renderSubtasks();
+    });
+    list.appendChild(div);
+  }
+}
+
+document.getElementById('subtask-add-btn').onclick = () => {
+  const inp = document.getElementById('subtask-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  CURRENT_SUBTASKS.push({ id: crypto.randomUUID().slice(0, 8), text, done: false });
+  inp.value = '';
+  renderSubtasks();
+};
+
+document.getElementById('subtask-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('subtask-add-btn').click(); }
+});
+
+// ── Dependencies ──
+function renderDeps() {
+  const chips = document.getElementById('dep-chips');
+  chips.innerHTML = '';
+  for (const depId of CURRENT_DEPS) {
+    const depItem = ITEMS.find(i => i.id === depId);
+    const chip = document.createElement('span');
+    chip.className = 'dep-chip';
+    chip.textContent = depId;
+    chip.title = depItem ? depItem.title : depId;
+    chip.addEventListener('click', () => {
+      CURRENT_DEPS = CURRENT_DEPS.filter(d => d !== depId);
+      renderDeps();
+    });
+    chips.appendChild(chip);
+  }
+}
+
+function renderDepSelect(currentItemId) {
+  const sel = document.getElementById('dep-select');
+  sel.innerHTML = '<option value="">Link item...</option>';
+  for (const item of ITEMS) {
+    if (item.id === currentItemId) continue;
+    if (CURRENT_DEPS.includes(item.id)) continue;
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = `${item.id} - ${item.title}`;
+    sel.appendChild(opt);
+  }
+}
+
+document.getElementById('dep-add-btn').onclick = () => {
+  const sel = document.getElementById('dep-select');
+  const val = sel.value;
+  if (!val) return;
+  CURRENT_DEPS.push(val);
+  sel.value = '';
+  renderDeps();
 };
 
 // ── Refresh ──
@@ -1370,13 +1792,26 @@ document.getElementById('btn-rename-board').onclick = async () => {
   if (!CURRENT_BOARD) return;
   const newName = prompt('New board name:', CURRENT_BOARD.name);
   if (!newName || newName.trim() === '' || newName.trim() === CURRENT_BOARD.name) return;
-  const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { name: newName.trim() } });
-  CURRENT_BOARD.name = updated.name;
-  const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
-  if (b) b.name = updated.name;
-  renderBoardPicker();
-  document.getElementById('board-picker').value = CURRENT_BOARD.id;
-  toast(`Renamed to "${updated.name}"`);
+  try {
+    const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { name: newName.trim() } });
+    CURRENT_BOARD.name = updated.name;
+    const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
+    if (b) b.name = updated.name;
+    renderBoardPicker();
+    document.getElementById('board-picker').value = CURRENT_BOARD.id;
+    toast(`Renamed to "${updated.name}"`);
+  } catch (err) { toast(`Failed: ${err.message}`); }
+};
+
+// ── Board Duplication ──
+document.getElementById('btn-duplicate-board').onclick = async () => {
+  if (!CURRENT_BOARD) return;
+  try {
+    const newBoard = await api(`/boards/${CURRENT_BOARD.id}/duplicate`, { method: 'POST', body: {} });
+    BOARDS.push({ id: newBoard.id, name: newBoard.name, columns: newBoard.columns, item_count: newBoard.items?.length || 0 });
+    renderBoardPicker();
+    toast(`Duplicated as "${newBoard.name}"`);
+  } catch (err) { toast(`Failed: ${err.message}`); }
 };
 
 // ── Column Management ──
@@ -1437,16 +1872,18 @@ document.getElementById('col-add-input').addEventListener('keydown', (e) => {
 
 document.getElementById('col-modal-save').onclick = async () => {
   if (!CURRENT_BOARD || !colDraft.length) { toast('Need at least one column'); return; }
-  const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { columns: colDraft } });
-  CURRENT_BOARD.columns = updated.columns;
-  const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
-  if (b) b.columns = updated.columns;
-  buildColumns();
-  buildFilters();
-  render();
-  updateStatusSelect();
-  closeColModal();
-  toast('Columns updated');
+  try {
+    const updated = await api(`/boards/${CURRENT_BOARD.id}`, { method: 'PATCH', body: { columns: colDraft } });
+    CURRENT_BOARD.columns = updated.columns;
+    const b = BOARDS.find(b => b.id === CURRENT_BOARD.id);
+    if (b) b.columns = updated.columns;
+    buildColumns();
+    buildFilters();
+    render();
+    updateStatusSelect();
+    closeColModal();
+    toast('Columns updated');
+  } catch (err) { toast(`Failed: ${err.message}`); }
 };
 
 document.getElementById('btn-manage-cols').onclick = openColModal;
@@ -1457,13 +1894,346 @@ document.getElementById('col-modal-overlay').onclick = (e) => { if (e.target ===
 document.getElementById('btn-new').onclick = openNewModal;
 document.getElementById('btn-refresh').onclick = refreshBoard;
 
+// ── Bulk Operations ──
+function toggleItemSelect(id) {
+  if (SELECTED_ITEMS.has(id)) SELECTED_ITEMS.delete(id);
+  else SELECTED_ITEMS.add(id);
+  updateBulkBar();
+  render();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const count = SELECTED_ITEMS.size;
+  if (count > 0) {
+    bar.classList.add('active');
+    document.getElementById('bulk-count').textContent = `${count} selected`;
+  } else {
+    bar.classList.remove('active');
+  }
+}
+
+document.getElementById('bulk-clear').onclick = () => {
+  SELECTED_ITEMS.clear();
+  updateBulkBar();
+  render();
+};
+
+document.getElementById('bulk-delete').onclick = async () => {
+  if (!SELECTED_ITEMS.size) return;
+  if (!await confirmDialog(`Delete ${SELECTED_ITEMS.size} items?`)) return;
+  const deleted = [];
+  for (const id of SELECTED_ITEMS) {
+    const item = ITEMS.find(i => i.id === id);
+    if (item) deleted.push({ ...item });
+    await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'DELETE' });
+  }
+  ITEMS = ITEMS.filter(i => !SELECTED_ITEMS.has(i.id));
+  pushUndo({ action: 'bulk_delete', items: deleted });
+  SELECTED_ITEMS.clear();
+  updateBulkBar();
+  render();
+  toast(`Deleted ${deleted.length} items`);
+};
+
+document.getElementById('bulk-move').onclick = async () => {
+  if (!SELECTED_ITEMS.size) return;
+  const target = prompt(`Move ${SELECTED_ITEMS.size} items to column:\n${CURRENT_BOARD.columns.join(', ')}`);
+  if (!target || !CURRENT_BOARD.columns.includes(target)) { toast('Invalid column'); return; }
+  const moved = [];
+  for (const id of SELECTED_ITEMS) {
+    const item = ITEMS.find(i => i.id === id);
+    if (item) {
+      const from = item.status;
+      await api(`/boards/${CURRENT_BOARD.id}/items/${id}`, { method: 'PATCH', body: { status: target } });
+      item.status = target;
+      moved.push({ id, from, to: target });
+    }
+  }
+  pushUndo({ action: 'bulk_move', moves: moved });
+  SELECTED_ITEMS.clear();
+  updateBulkBar();
+  render();
+  toast(`Moved ${moved.length} items`);
+});
+
+// ── Undo ──
+function pushUndo(entry) {
+  UNDO_STACK.push(entry);
+  if (UNDO_STACK.length > 30) UNDO_STACK.shift();
+}
+
+async function performUndo() {
+  if (!UNDO_STACK.length) { toast('Nothing to undo'); return; }
+  const entry = UNDO_STACK.pop();
+  try {
+    if (entry.action === 'delete') {
+      await api(`/boards/${CURRENT_BOARD.id}/items`, { method: 'POST', body: entry.item });
+      ITEMS.push(entry.item);
+      toast(`Restored ${entry.item.id}`);
+    } else if (entry.action === 'move') {
+      await api(`/boards/${CURRENT_BOARD.id}/items/${entry.itemId}`, { method: 'PATCH', body: { status: entry.from } });
+      const item = ITEMS.find(i => i.id === entry.itemId);
+      if (item) item.status = entry.from;
+      toast(`Moved ${entry.itemId} back`);
+    } else if (entry.action === 'bulk_delete') {
+      for (const item of entry.items) {
+        await api(`/boards/${CURRENT_BOARD.id}/items`, { method: 'POST', body: item });
+        ITEMS.push(item);
+      }
+      toast(`Restored ${entry.items.length} items`);
+    } else if (entry.action === 'bulk_move') {
+      for (const m of entry.moves) {
+        await api(`/boards/${CURRENT_BOARD.id}/items/${m.id}`, { method: 'PATCH', body: { status: m.from } });
+        const item = ITEMS.find(i => i.id === m.id);
+        if (item) item.status = m.from;
+      }
+      toast(`Reverted ${entry.moves.length} moves`);
+    }
+    render();
+  } catch (err) { toast(`Undo failed: ${err.message}`); }
+}
+
+// ── History ──
+document.getElementById('btn-history').onclick = async () => {
+  if (!CURRENT_BOARD) return;
+  try {
+    const history = await api(`/boards/${CURRENT_BOARD.id}/history?limit=100`);
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    if (!history.length) {
+      list.innerHTML = '<div style="padding:16px;color:var(--text-2);font-family:var(--font-mono);font-size:0.8rem;text-align:center">No history yet</div>';
+    } else {
+      for (const entry of [...history].reverse()) {
+        const div = document.createElement('div');
+        div.className = 'history-entry';
+        let actionHtml = '';
+        if (entry.action === 'create_item') {
+          actionHtml = `Created <span class="item-id">${entry.item_id}</span> "${esc(entry.title)}"`;
+        } else if (entry.action === 'update_item') {
+          const fields = Object.keys(entry.changes || {}).map(f => `<span class="field-name">${f}</span>`).join(', ');
+          actionHtml = `Updated <span class="item-id">${entry.item_id}</span> "${esc(entry.title)}": ${fields}`;
+        } else if (entry.action === 'delete_item') {
+          actionHtml = `Deleted <span class="item-id">${entry.item_id}</span> "${esc(entry.title)}"`;
+        }
+        div.innerHTML = `<span class="history-ts">${entry.timestamp || ''}</span><span class="history-action">${actionHtml}</span>`;
+        list.appendChild(div);
+      }
+    }
+    document.getElementById('history-modal-overlay').classList.add('open');
+  } catch (err) { toast(`Failed: ${err.message}`); }
+};
+
+function closeHistoryModal() { document.getElementById('history-modal-overlay').classList.remove('open'); }
+document.getElementById('history-modal-close').onclick = closeHistoryModal;
+document.getElementById('history-modal-cancel').onclick = closeHistoryModal;
+document.getElementById('history-modal-overlay').onclick = (e) => { if (e.target === e.currentTarget) closeHistoryModal(); };
+
+// ── Export ──
+document.getElementById('btn-export').onclick = async () => {
+  if (!CURRENT_BOARD) return;
+  try {
+    const data = await api(`/boards/${CURRENT_BOARD.id}/export?format=json`);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${CURRENT_BOARD.name}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Exported board');
+  } catch (err) { toast(`Export failed: ${err.message}`); }
+};
+
+// ── Import ──
+document.getElementById('btn-import').onclick = () => {
+  document.getElementById('import-modal-overlay').classList.add('open');
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-modal-confirm').style.display = 'none';
+  document.getElementById('import-file').value = '';
+};
+
+function closeImportModal() { document.getElementById('import-modal-overlay').classList.remove('open'); }
+document.getElementById('import-modal-close').onclick = closeImportModal;
+document.getElementById('import-modal-cancel').onclick = closeImportModal;
+document.getElementById('import-modal-overlay').onclick = (e) => { if (e.target === e.currentTarget) closeImportModal(); };
+
+const importDrop = document.getElementById('import-drop');
+const importFile = document.getElementById('import-file');
+
+importDrop.onclick = () => importFile.click();
+importDrop.addEventListener('dragover', (e) => { e.preventDefault(); importDrop.classList.add('dragover'); });
+importDrop.addEventListener('dragleave', () => importDrop.classList.remove('dragover'));
+importDrop.addEventListener('drop', (e) => {
+  e.preventDefault();
+  importDrop.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleImportFile(file);
+});
+importFile.addEventListener('change', () => {
+  if (importFile.files[0]) handleImportFile(importFile.files[0]);
+});
+
+let importData = null;
+function handleImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      importData = JSON.parse(e.target.result);
+      const preview = document.getElementById('import-preview');
+      preview.style.display = 'block';
+      preview.innerHTML = `Board: <strong>${esc(importData.name || 'unnamed')}</strong><br>Items: ${importData.items?.length || 0}`;
+      document.getElementById('import-modal-confirm').style.display = '';
+    } catch { toast('Invalid JSON file'); }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('import-modal-confirm').onclick = async () => {
+  if (!importData) return;
+  try {
+    const board = await api('/import', { method: 'POST', body: importData });
+    BOARDS.push({ id: board.id, name: board.name, columns: board.columns, item_count: board.items?.length || 0 });
+    renderBoardPicker();
+    await selectBoard(board.id);
+    closeImportModal();
+    toast(`Imported "${board.name}"`);
+  } catch (err) { toast(`Import failed: ${err.message}`); }
+};
+
+// ── Cross-board Search ──
+let searchResults = [];
+let searchSelectedIdx = -1;
+
+function openSearchModal() {
+  document.getElementById('search-modal-overlay').classList.add('open');
+  const inp = document.getElementById('search-modal-input');
+  inp.value = '';
+  inp.focus();
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">Type to search across all boards...</div>';
+  searchResults = [];
+  searchSelectedIdx = -1;
+}
+
+function closeSearchModal() {
+  document.getElementById('search-modal-overlay').classList.remove('open');
+}
+
+document.getElementById('btn-search-all').onclick = openSearchModal;
+document.getElementById('search-modal-overlay').onclick = (e) => {
+  if (e.target === e.currentTarget) closeSearchModal();
+};
+
+document.getElementById('search-modal-input').addEventListener('input', async (e) => {
+  const q = e.target.value.trim();
+  const container = document.getElementById('search-results');
+  if (!q) {
+    container.innerHTML = '<div class="search-empty">Type to search across all boards...</div>';
+    searchResults = [];
+    searchSelectedIdx = -1;
+    return;
+  }
+  try {
+    searchResults = await api(`/search?q=${encodeURIComponent(q)}`);
+    searchSelectedIdx = -1;
+    if (!searchResults.length) {
+      container.innerHTML = '<div class="search-empty">No results found</div>';
+      return;
+    }
+    container.innerHTML = '';
+    for (let i = 0; i < searchResults.length; i++) {
+      const r = searchResults[i];
+      const div = document.createElement('div');
+      div.className = 'search-result-item';
+      div.dataset.idx = i;
+      div.innerHTML = `
+        <span class="search-result-board">${esc(r._board_name)}</span>
+        <span class="search-result-title">${esc(r.title || r.id)}</span>
+        <span class="search-result-status">${r.status || ''}</span>`;
+      div.onclick = async () => {
+        closeSearchModal();
+        if (r._board !== CURRENT_BOARD?.id) {
+          document.getElementById('board-picker').value = r._board;
+          await selectBoard(r._board);
+        }
+        highlightItem(r.id);
+      };
+      container.appendChild(div);
+    }
+  } catch {
+    container.innerHTML = '<div class="search-empty">Search failed</div>';
+  }
+});
+
+document.getElementById('search-modal-input').addEventListener('keydown', (e) => {
+  const items = document.querySelectorAll('.search-result-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchSelectedIdx = Math.min(searchSelectedIdx + 1, items.length - 1);
+    items.forEach((el, i) => el.style.background = i === searchSelectedIdx ? 'var(--bg-2)' : '');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchSelectedIdx = Math.max(searchSelectedIdx - 1, 0);
+    items.forEach((el, i) => el.style.background = i === searchSelectedIdx ? 'var(--bg-2)' : '');
+  } else if (e.key === 'Enter' && searchSelectedIdx >= 0 && items[searchSelectedIdx]) {
+    items[searchSelectedIdx].click();
+  } else if (e.key === 'Escape') {
+    closeSearchModal();
+  }
+});
+
+function highlightItem(itemId) {
+  setTimeout(() => {
+    const card = document.querySelector(`.card[data-id="${itemId}"]`);
+    if (card) {
+      card.classList.add('expanded');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.boxShadow = '0 0 0 2px var(--accent)';
+      setTimeout(() => card.style.boxShadow = '', 2000);
+    }
+  }, 100);
+}
+
+// ── Deep Linking ──
+function setupHashRouting() {
+  window.addEventListener('hashchange', async () => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const [boardId, itemId] = hash.split('/');
+    if (boardId && (!CURRENT_BOARD || CURRENT_BOARD.id !== boardId)) {
+      if (BOARDS.find(b => b.id === boardId)) {
+        await selectBoard(boardId);
+      }
+    }
+    if (itemId) highlightItem(itemId);
+  });
+}
+
+// ── Theme Toggle ──
+function getTheme() { return localStorage.getItem('sanban-theme') || 'dark'; }
+function applyTheme(theme) {
+  document.documentElement.classList.toggle('light', theme === 'light');
+  const btn = document.getElementById('btn-theme');
+  btn.textContent = theme === 'light' ? '\u263E' : '\u2600';
+  btn.title = theme === 'light' ? 'Switch to dark' : 'Switch to light';
+  localStorage.setItem('sanban-theme', theme);
+}
+document.getElementById('btn-theme').onclick = () => {
+  applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+};
+applyTheme(getTheme());
+
+// ── Fix card click-toggle conflicts with drag ──
+let wasDragging = false;
+document.addEventListener('dragend', () => { wasDragging = true; setTimeout(() => wasDragging = false, 50); });
+
 // ── Toast ──
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  el.innerHTML = msg;
   el.classList.add('show');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 2000);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
 init();
