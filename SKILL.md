@@ -44,8 +44,10 @@ http://localhost:8900/api
 | `GET` | `/api/boards` | List boards |
 | `POST` | `/api/boards` | Create board `{ name, columns? }` |
 | `GET` | `/api/boards/:id` | Get board + items |
+| `PATCH` | `/api/boards/:id` | Rename board `{ name }` |
 | `DELETE` | `/api/boards/:id` | Delete board |
 | `GET` | `/api/boards/:id/items` | List items (`?q=`, `?status=`, `?tag=`, `?assignee=`) |
+| `GET` | `/api/boards/:id/items/:iid` | Get single item |
 | `POST` | `/api/boards/:id/items` | Create item |
 | `PATCH` | `/api/boards/:id/items/:iid` | Update item |
 | `DELETE` | `/api/boards/:id/items/:iid` | Delete item |
@@ -100,7 +102,9 @@ Use when: agent has MCP tools available, prefer direct tool calls over HTTP.
 | `list_boards` | — |
 | `create_board` | `name`, `columns?` |
 | `get_board` | `board_id` |
-| `create_item` | `board_id`, `title`, `status?`, `priority?`, `effort?`, `tags?`, `assignee?`, `due_date?`, `description?` |
+| `delete_board` | `board_id` |
+| `create_item` | `board_id`, `title`, `status?`, `description?`, `priority?`, `effort?`, `tags?`, `assignee?`, `due_date?`, `sort_order?`, `meta?` |
+| `get_item` | `board_id`, `item_id` |
 | `update_item` | `board_id`, `item_id`, + any field |
 | `move_item` | `board_id`, `item_id`, `new_status` |
 | `delete_item` | `board_id`, `item_id` |
@@ -120,6 +124,8 @@ Use when: agent has MCP tools available, prefer direct tool calls over HTTP.
 | assignee | string | empty |
 | due_date | ISO date | empty |
 | description | string (markdown) | empty |
+| sort_order | float | `0` |
+| meta | dict | `{}` |
 
 ## Data Location
 
