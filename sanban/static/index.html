@@ -291,11 +291,10 @@
   .badge-pri-high { background: var(--orange-dim); color: var(--orange); }
   .badge-pri-medium { background: var(--yellow-dim); color: var(--yellow); }
   .badge-pri-low { background: var(--cyan-dim); color: var(--cyan); }
-  .badge-effort-xs { background: var(--cyan-dim); color: var(--cyan); }
-  .badge-effort-s { background: var(--accent-dim); color: var(--accent); }
-  .badge-effort-m { background: var(--purple-dim); color: var(--purple); }
-  .badge-effort-l { background: var(--orange-dim); color: var(--orange); }
-  .badge-effort-xl { background: var(--red-dim); color: var(--red); }
+  .badge-effort-xs, .badge-effort-s, .badge-effort-m, .badge-effort-l, .badge-effort-xl {
+    background: transparent; color: var(--text-2);
+    border: 1px solid var(--border); font-family: var(--font-mono); font-weight: 500;
+  }
   .badge-due { background: var(--yellow-dim); color: var(--yellow); }
   .badge-due.overdue { background: var(--red-dim); color: var(--red); }
   .badge-assignee { background: var(--green-dim); color: var(--green); }
