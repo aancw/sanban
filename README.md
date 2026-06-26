@@ -19,6 +19,14 @@ sanban              # http://localhost:8900
 
 The web server runs independently. Agents connect via MCP separately.
 
+## Setup with an AI Agent
+
+Paste this into opencode, Claude Code, Cursor, or any AI agent — it will install sanban, start the server, register MCP, load the skill, and verify everything:
+
+```
+Clone https://github.com/aancw/sanban, run `uv tool install .` from inside the repo (binary lands at ~/.local/bin/sanban — ensure ~/.local/bin is on PATH, e.g. `export PATH="$HOME/.local/bin:$PATH"`), start the server with `sanban` running in the background (or nohup/disown), register it as an MCP server named "sanban" running `sanban --mcp-only`, copy SKILL.md from the cloned repo into the agent's skills folder (e.g. ~/.claude/skills/sanban/SKILL.md or ~/.agents/skills/sanban/SKILL.md), then call `list_boards` to confirm it works.
+```
+
 ## Features
 
 - Multiple boards with custom columns
