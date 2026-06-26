@@ -137,11 +137,16 @@
 
   /* ── Stats ── */
   .stats {
-    display: flex; gap: 16px; font-family: var(--font-mono);
-    font-size: 0.8rem; color: var(--text-2); margin-left: auto;
+    display: flex; gap: 8px; font-family: var(--font-mono);
+    font-size: 0.75rem; color: var(--text-2); margin-left: auto;
+    align-items: center;
   }
-  .stats .num { color: var(--text-0); font-weight: 500; }
-  .stats .pct { color: var(--green); }
+  .stats-chip {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    padding: 3px 8px; display: flex; align-items: center; gap: 4px;
+  }
+  .stats-chip .num { color: var(--text-0); font-weight: 500; }
+  .stats .pct { color: var(--green); font-weight: 500; }
 
   /* ── Filters ── */
   .filters { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
@@ -1435,22 +1440,10 @@ function updateStats() {
   const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
   const done = ITEMS.filter(i => i.status === lastCol).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const assigneeCounts = {};
-  for (const item of ITEMS) {
-    const a = item.assignee || 'unassigned';
-    assigneeCounts[a] = (assigneeCounts[a] || 0) + 1;
-  }
-  let assigneeHtml = '';
-  const entries = Object.entries(assigneeCounts).sort((a, b) => b[1] - a[1]);
-  for (const [name, count] of entries.slice(0, 3)) {
-    assigneeHtml += `<span>@${esc(name)}: <span class="num">${count}</span></span>`;
-  }
-  if (entries.length > 3) assigneeHtml += `<span>+${entries.length - 3} more</span>`;
   document.getElementById('stats').innerHTML = `
-    <span><span class="num">${total}</span> total</span>
-    <span><span class="num">${done}</span> done</span>
-    <span class="pct">${pct}%</span>
-    ${assigneeHtml}`;
+    <span class="stats-chip"><span class="num">${total}</span> total</span>
+    <span class="stats-chip"><span class="num">${done}</span> done</span>
+    <span class="stats-chip"><span class="pct">${pct}%</span></span>`;
 }
 
 // ── Drag & Drop ──
