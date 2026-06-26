@@ -253,8 +253,12 @@
     background: var(--bg-2); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 10px 12px;
     cursor: grab; transition: border-color 0.12s, transform 0.1s; user-select: none;
-    position: relative;
+    position: relative; border-left: 3px solid transparent;
   }
+  .card.pri-critical { border-left-color: var(--red); }
+  .card.pri-high { border-left-color: var(--orange); }
+  .card.pri-medium { border-left-color: var(--yellow); }
+  .card.pri-low { border-left-color: var(--cyan); }
   .card:hover { border-color: var(--border-hover); }
   .card:active { cursor: grabbing; transform: scale(0.98); }
   .card.dragging { opacity: 0.3; }
@@ -1241,7 +1245,7 @@ function createCard(item) {
   const isDone = item.status === lastCol;
 
   const card = document.createElement('div');
-  card.className = 'card' + (isDone ? ' done' : '');
+  card.className = 'card' + (isDone ? ' done' : '') + (pri !== 'none' ? ` pri-${pri}` : '');
   card.draggable = true;
   card.dataset.id = item.id;
 
