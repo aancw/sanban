@@ -712,6 +712,7 @@
     <button class="btn" id="btn-new-board" title="New board">+ board</button>
     <div class="header-spacer"></div>
     <div class="stats" id="stats"></div>
+    <button class="btn" id="btn-refresh-header" title="Refresh board (r)">&#x21BB;</button>
     <button class="btn" id="btn-search-all" title="Search across boards (Ctrl+K)">&#x1F50D;</button>
     <button class="theme-toggle" id="btn-theme" title="Toggle theme">&#x263E;</button>
   </div>
@@ -750,7 +751,6 @@
         <button class="dropdown-item" id="btn-import"><span class="dropdown-icon">&#x21E3;</span> Import</button>
         <div class="dropdown-sep"></div>
         <button class="dropdown-item" id="btn-history"><span class="dropdown-icon">&#x231A;</span> Activity history</button>
-        <button class="dropdown-item" id="btn-refresh"><span class="dropdown-icon">&#x21BB;</span> Refresh</button>
       </div>
     </div>
   </div>
@@ -1929,7 +1929,7 @@ document.getElementById('col-modal-cancel').onclick = closeColModal;
 document.getElementById('col-modal-overlay').onclick = (e) => { if (e.target === e.currentTarget) closeColModal(); };
 
 document.getElementById('btn-new').onclick = openNewModal;
-document.getElementById('btn-refresh').onclick = refreshBoard;
+document.getElementById('btn-refresh-header').onclick = refreshBoard;
 
 // ── Bulk Operations ──
 function updateBulkBar() {
