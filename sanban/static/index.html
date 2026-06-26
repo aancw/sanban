@@ -418,11 +418,23 @@
     font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-2); opacity: 0.6;
     background: var(--bg-0); padding: 4px 8px; border-radius: 4px;
     border: 1px solid var(--border); pointer-events: none;
+    display: none;
   }
+  .shortcuts.visible { display: block; }
   .shortcuts kbd {
     background: var(--bg-3); padding: 1px 4px; border-radius: 2px;
     border: 1px solid var(--border); font-family: var(--font-mono);
   }
+  .help-btn {
+    position: fixed; bottom: 20px; left: 20px;
+    width: 28px; height: 28px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500;
+    transition: all 0.12s; z-index: 30;
+  }
+  .help-btn:hover { border-color: var(--border-hover); color: var(--text-0); }
+  .help-btn.hidden { display: none; }
 
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; }
@@ -946,7 +958,8 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="shortcuts">
+<button class="help-btn" id="help-btn" title="Keyboard shortcuts (?)">?</button>
+<div class="shortcuts" id="shortcuts-bar">
   <kbd>/</kbd> search &nbsp; <kbd>Ctrl+K</kbd> all boards &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>r</kbd> refresh &nbsp; <kbd>Esc</kbd> close
 </div>
 
@@ -1016,6 +1029,7 @@ async function init() {
   }
   renderBoardPicker();
   setupKeyboard();
+  setupShortcutsToggle();
   setupHashRouting();
 }
 
@@ -1571,6 +1585,23 @@ document.getElementById('search').addEventListener('input', (e) => {
   render();
 });
 
+// ── Shortcuts Toggle ──
+function setupShortcutsToggle() {
+  const helpBtn = document.getElementById('help-btn');
+  const shortcutsBar = document.getElementById('shortcuts-bar');
+  shortcutsBar.innerHTML = '<kbd>/</kbd> search &nbsp; <kbd>Ctrl+K</kbd> all boards &nbsp; <kbd>n</kbd> new &nbsp; <kbd>e</kbd> expand &nbsp; <kbd>r</kbd> refresh &nbsp; <kbd>?</kbd> hide &nbsp; <kbd>Esc</kbd> close';
+  
+  helpBtn.addEventListener('click', () => {
+    const isVisible = shortcutsBar.classList.toggle('visible');
+    helpBtn.classList.toggle('hidden', isVisible);
+  });
+  
+  shortcutsBar.addEventListener('click', () => {
+    shortcutsBar.classList.remove('visible');
+    helpBtn.classList.remove('hidden');
+  });
+}
+
 // ── Keyboard ──
 function setupKeyboard() {
   const search = document.getElementById('search');
@@ -1584,6 +1615,7 @@ function setupKeyboard() {
     if (e.key === 'n') { e.preventDefault(); openNewModal(); }
     if (e.key === 'e') { e.preventDefault(); toggleExpandAll(); }
     if (e.key === 'r') { e.preventDefault(); refreshBoard(); }
+    if (e.key === '?') { e.preventDefault(); document.getElementById('help-btn').click(); }
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearchModal(); }
     if (e.key === 'z' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); performUndo(); }
   });
