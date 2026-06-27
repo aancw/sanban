@@ -44,14 +44,18 @@ http://localhost:8900/api
 | `GET` | `/api/boards` | List boards |
 | `POST` | `/api/boards` | Create board `{ name, columns? }` |
 | `GET` | `/api/boards/:id` | Get board + items |
-| `PATCH` | `/api/boards/:id` | Rename board `{ name }` |
+| `PATCH` | `/api/boards/:id` | Rename board / update columns `{ name?, columns? }` |
 | `DELETE` | `/api/boards/:id` | Delete board |
+| `POST` | `/api/boards/:id/duplicate` | Duplicate board `{ name? }` |
 | `GET` | `/api/boards/:id/items` | List items (`?q=`, `?status=`, `?tag=`, `?assignee=`) |
-| `GET` | `/api/boards/:id/items/:iid` | Get single item |
 | `POST` | `/api/boards/:id/items` | Create item |
-| `PATCH` | `/api/boards/:id/items/:iid` | Update item |
+| `GET` | `/api/boards/:id/items/:iid` | Get single item |
+| `PATCH` | `/api/boards/:id/items/:iid` | Update item (any field) |
 | `DELETE` | `/api/boards/:id/items/:iid` | Delete item |
-| `GET` | `/api/search?q=` | Search across boards |
+| `GET` | `/api/boards/:id/history?limit=` | Activity history (`limit` 1–500, default 50) |
+| `GET` | `/api/boards/:id/export?format=json\|csv` | Export board |
+| `POST` | `/api/import` | Import board `{ name?, columns?, items[] }` |
+| `GET` | `/api/search?q=&board_id=` | Search across boards |
 
 ### Examples
 
@@ -60,6 +64,20 @@ http://localhost:8900/api
 curl -X POST http://localhost:8900/api/boards \
   -H 'Content-Type: application/json' \
   -d '{"name":"my-board"}'
+```
+
+**Rename / update columns:**
+```bash
+curl -X PATCH http://localhost:8900/api/boards/<board_id> \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"new-name","columns":["todo","doing","done"]}'
+```
+
+**Duplicate board:**
+```bash
+curl -X POST http://localhost:8900/api/boards/<board_id>/duplicate \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"copy-of-board"}'
 ```
 
 **Add item:**
@@ -74,6 +92,23 @@ curl -X POST http://localhost:8900/api/boards/<board_id>/items \
 curl -X PATCH http://localhost:8900/api/boards/<board_id>/items/<item_id> \
   -H 'Content-Type: application/json' \
   -d '{"status":"done"}'
+```
+
+**Export board as CSV:**
+```bash
+curl 'http://localhost:8900/api/boards/<board_id>/export?format=csv' -o board.csv
+```
+
+**Import board:**
+```bash
+curl -X POST http://localhost:8900/api/import \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"imported","columns":["todo","done"],"items":[{"title":"One","status":"todo"}]}'
+```
+
+**Activity history:**
+```bash
+curl 'http://localhost:8900/api/boards/<board_id>/history?limit=20'
 ```
 
 ---
@@ -103,12 +138,14 @@ Use when: agent has MCP tools available, prefer direct tool calls over HTTP.
 | `create_board` | `name`, `columns?` |
 | `get_board` | `board_id` |
 | `delete_board` | `board_id` |
-| `create_item` | `board_id`, `title`, `status?`, `description?`, `priority?`, `effort?`, `tags?`, `assignee?`, `due_date?`, `sort_order?`, `meta?` |
+| `duplicate_board` | `board_id`, `name?` |
 | `get_item` | `board_id`, `item_id` |
+| `create_item` | `board_id`, `title`, `status?`, `description?`, `priority?`, `effort?`, `tags?`, `assignee?`, `due_date?`, `sort_order?`, `meta?` |
 | `update_item` | `board_id`, `item_id`, + any field |
 | `move_item` | `board_id`, `item_id`, `new_status` |
 | `delete_item` | `board_id`, `item_id` |
 | `search` | `query`, `board_id?` |
+| `get_history` | `board_id`, `limit?` (default 50) |
 
 ---
 
@@ -124,12 +161,14 @@ Use when: agent has MCP tools available, prefer direct tool calls over HTTP.
 | assignee | string | empty |
 | due_date | ISO date | empty |
 | description | string (markdown) | empty |
-| sort_order | float | `0` |
-| meta | dict | `{}` |
+| sort_order | float (lower = higher in column) | `0` |
+| meta | freeform dict | `{}` |
+| subtasks | list of `{ id, title, done? }` | `[]` |
+| dependencies | list of item IDs | `[]` |
 
 ## Data Location
 
-`~/.sanban/boards/<id>.json` — one JSON file per board. Override with `SANBAN_DATA_DIR`.
+`~/.sanban/boards/<id>.json` — one JSON file per board. Activity log: `~/.sanban/history/<id>.json` (capped at 500 entries). Override both with `SANBAN_DATA_DIR`.
 
 ## Markdown Support
 
