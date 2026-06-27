@@ -219,7 +219,7 @@ def api_export_board(board_id: str, format: str = Query("json")):
 @app.post("/api/import", status_code=201)
 def api_import_board(body: ImportData):
     name = body.name or "imported-board"
-    columns = body.columns or ["backlog", "in_progress", "done"]
+    columns = body.columns or ["backlog", "in_progress", "done", "not_applicable"]
     board = storage.create_board(name, columns)
     if body.items:
         for item_data in body.items:

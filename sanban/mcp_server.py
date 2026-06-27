@@ -26,7 +26,7 @@ def create_board(name: str, columns: list[str] | None = None) -> str:
 
     Args:
         name: Board name
-        columns: Column names (default: backlog, in_progress, done)
+        columns: Column names (default: backlog, in_progress, done, not_applicable)
     """
     board = storage.create_board(name, columns)
     return f"Created board '{name}' (id: {board['id']})"

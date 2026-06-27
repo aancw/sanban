@@ -108,7 +108,7 @@ def create_board(name: str, columns: list[str] | None = None) -> dict:
     data = {
         "id": board_id,
         "name": name,
-        "columns": columns or ["backlog", "in_progress", "done"],
+        "columns": columns or ["backlog", "in_progress", "done", "not_applicable"],
         "items": [],
     }
     _save(board_id, data)

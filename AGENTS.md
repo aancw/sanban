@@ -112,7 +112,7 @@ curl 'http://localhost:8900/api/search?q=bug&board_id=<board_id>'
 
 - `title` — supports **markdown** (bold, code, links, lists)
 - `description` — supports **markdown**
-- `status` — column name (default: `backlog`, `in_progress`, `done`)
+- `status` — column name (default: `backlog`, `in_progress`, `done`, `not_applicable`)
 - `priority` — `none`, `low`, `medium`, `high`, `critical`
 - `effort` — `XS`, `S`, `M`, `L`, `XL`
 - `tags` — array of strings
@@ -183,6 +183,6 @@ Single-file vanilla HTML/CSS/JS at `sanban/static/index.html`. No build step, no
 
 - Board IDs and item IDs are auto-generated 8-char hex
 - Timestamps are ISO 8601 UTC
-- Board columns are customizable (default: backlog, in_progress, done)
+- Board columns are customizable (default: backlog, in_progress, done, not_applicable)
 - JSON files are the source of truth — edit directly or via API
 - Frontend uses `localStorage` for drag state; API is source of truth

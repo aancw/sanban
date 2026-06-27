@@ -9,7 +9,7 @@
     "columns": {
       "type": "array",
       "items": { "type": "string" },
-      "default": ["backlog", "in_progress", "done"]
+      "default": ["backlog", "in_progress", "done", "not_applicable"]
     },
     "items": {
       "type": "array",
