@@ -200,6 +200,75 @@
   .chip:active { transform: scale(0.95); }
   .chip.active { background: var(--accent-dim); border-color: var(--accent-line); color: var(--accent); }
 
+  /* ── Filter Dropdowns ── */
+  .filter-dropdown { position: relative; }
+  .filter-trigger {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    padding: 3px 8px 3px 10px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-2); cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+    user-select: none; outline: none; line-height: 1.4;
+  }
+  .filter-trigger:hover { border-color: var(--border-hover); color: var(--text-1); }
+  .filter-trigger.active {
+    background: var(--accent-dim); border-color: var(--accent-line); color: var(--accent);
+  }
+  .filter-trigger .filter-label-text { letter-spacing: 0.02em; }
+  .filter-trigger .filter-count {
+    font-size: 0.62rem; padding: 0 5px; border-radius: 999px;
+    background: var(--accent); color: var(--accent-fg); font-weight: 600;
+    min-width: 14px; text-align: center; line-height: 1.55;
+  }
+  .filter-trigger .filter-arrow { font-size: 0.6rem; opacity: 0.7; margin-left: 1px; }
+  .filter-menu {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius);
+    min-width: 200px; max-width: 280px; max-height: 320px;
+    flex-direction: column; z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  .filter-menu.open { display: flex; }
+  .filter-menu-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.68rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);
+  }
+  .filter-menu-header .filter-clear {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.68rem;
+    color: var(--text-2); padding: 2px 6px; border-radius: 3px;
+    transition: all 0.12s;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .filter-menu-header .filter-clear:hover { color: var(--accent); background: var(--accent-dim); }
+  .filter-search {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    background: var(--bg-2); border: none; border-bottom: 1px solid var(--border);
+    color: var(--text-0); padding: 6px 10px; outline: none; width: 100%;
+  }
+  .filter-search::placeholder { color: var(--text-2); }
+  .filter-options { overflow-y: auto; padding: 4px; flex: 1; }
+  .filter-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 3px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--text-1); user-select: none;
+    transition: background 0.1s;
+  }
+  .filter-option:hover { background: var(--bg-2); }
+  .filter-option input[type="checkbox"] {
+    width: 13px; height: 13px; cursor: pointer; accent-color: var(--accent);
+    margin: 0; flex-shrink: 0;
+  }
+  .filter-option.filtered { display: none; }
+  .filter-empty {
+    padding: 14px; text-align: center; color: var(--text-2);
+    font-family: var(--font-mono); font-size: 0.75rem;
+  }
+
   /* ── Search ── */
   .search-wrap { position: relative; margin-left: auto; }
   .search-wrap input {
@@ -806,17 +875,51 @@
   </div>
   <div class="header-row header-row--filters">
     <div class="filters" id="filters">
-      <div class="filter-group" data-filter="priority">
-        <span class="filter-label">Pri</span>
+      <div class="filter-dropdown" data-filter="priority">
+        <button class="filter-trigger" data-filter-trigger="priority">
+          <span class="filter-label-text">Pri</span>
+          <span class="filter-count" data-filter-count="priority" style="display:none">0</span>
+          <span class="filter-arrow">▾</span>
+        </button>
+        <div class="filter-menu" data-filter-menu="priority">
+          <div class="filter-menu-header"><span>Priority</span><button class="filter-clear" data-filter-clear="priority">Clear</button></div>
+          <div class="filter-options" data-filter-options="priority"></div>
+        </div>
       </div>
-      <div class="filter-group" data-filter="effort">
-        <span class="filter-label">Effort</span>
+      <div class="filter-dropdown" data-filter="effort">
+        <button class="filter-trigger" data-filter-trigger="effort">
+          <span class="filter-label-text">Effort</span>
+          <span class="filter-count" data-filter-count="effort" style="display:none">0</span>
+          <span class="filter-arrow">▾</span>
+        </button>
+        <div class="filter-menu" data-filter-menu="effort">
+          <div class="filter-menu-header"><span>Effort</span><button class="filter-clear" data-filter-clear="effort">Clear</button></div>
+          <div class="filter-options" data-filter-options="effort"></div>
+        </div>
       </div>
-      <div class="filter-group" data-filter="assignee">
-        <span class="filter-label">Assignee</span>
+      <div class="filter-dropdown" data-filter="assignee">
+        <button class="filter-trigger" data-filter-trigger="assignee">
+          <span class="filter-label-text">Assignee</span>
+          <span class="filter-count" data-filter-count="assignee" style="display:none">0</span>
+          <span class="filter-arrow">▾</span>
+        </button>
+        <div class="filter-menu" data-filter-menu="assignee">
+          <div class="filter-menu-header"><span>Assignee</span><button class="filter-clear" data-filter-clear="assignee">Clear</button></div>
+          <input class="filter-search" data-filter-search="assignee" placeholder="Filter..." />
+          <div class="filter-options" data-filter-options="assignee"></div>
+        </div>
       </div>
-      <div class="filter-group" data-filter="tags">
-        <span class="filter-label">Tags</span>
+      <div class="filter-dropdown" data-filter="tags">
+        <button class="filter-trigger" data-filter-trigger="tags">
+          <span class="filter-label-text">Tags</span>
+          <span class="filter-count" data-filter-count="tags" style="display:none">0</span>
+          <span class="filter-arrow">▾</span>
+        </button>
+        <div class="filter-menu" data-filter-menu="tags">
+          <div class="filter-menu-header"><span>Tags</span><button class="filter-clear" data-filter-clear="tags">Clear</button></div>
+          <input class="filter-search" data-filter-search="tags" placeholder="Filter..." />
+          <div class="filter-options" data-filter-options="tags"></div>
+        </div>
       </div>
       <div class="search-wrap">
         <input type="text" id="search" placeholder="search..." />
@@ -1053,6 +1156,7 @@ async function init() {
   setupKeyboard();
   setupShortcutsToggle();
   setupHashRouting();
+  setupFilterDropdowns();
   if (BOARDS.length === 0) {
     document.getElementById('welcome').classList.remove('hidden');
     document.querySelector('.header').style.display = 'none';
@@ -1202,59 +1306,113 @@ function updateStatusSelect() {
 }
 
 function buildFilters() {
-  const groups = {
+  const staticGroups = {
     priority: ['critical', 'high', 'medium', 'low', 'none'],
     effort: ['XS', 'S', 'M', 'L', 'XL'],
   };
-  for (const [key, values] of Object.entries(groups)) {
-    const container = document.querySelector(`[data-filter="${key}"]`);
-    container.innerHTML = `<span class="filter-label">${key === 'priority' ? 'Pri' : key === 'effort' ? 'Effort' : 'Assignee'}</span>`;
-    for (const v of values) {
-      const chip = document.createElement('button');
-      chip.className = 'chip';
-      chip.textContent = v;
-      chip.dataset.value = v;
-      chip.addEventListener('click', () => {
-        const set = ACTIVE_FILTERS[key];
-        set.has(v) ? set.delete(v) : set.add(v);
-        chip.classList.toggle('active');
-        render();
-      });
-      container.appendChild(chip);
-    }
+  for (const [key, values] of Object.entries(staticGroups)) {
+    renderFilterOptions(key, values);
   }
   const assignees = [...new Set(ITEMS.map(i => i.assignee).filter(Boolean))].sort();
-  const assigneeContainer = document.querySelector('[data-filter="assignee"]');
-  assigneeContainer.innerHTML = '<span class="filter-label">Assignee</span>';
-  for (const v of assignees) {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = v;
-    chip.dataset.value = v;
-    chip.addEventListener('click', () => {
-      const set = ACTIVE_FILTERS.assignee;
-      set.has(v) ? set.delete(v) : set.add(v);
-      chip.classList.toggle('active');
-      render();
-    });
-    assigneeContainer.appendChild(chip);
-  }
+  renderFilterOptions('assignee', assignees);
   const allTags = [...new Set(ITEMS.flatMap(i => i.tags || []))].sort();
-  const tagContainer = document.querySelector('[data-filter="tags"]');
-  tagContainer.innerHTML = '<span class="filter-label">Tags</span>';
-  for (const v of allTags) {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = v;
-    chip.dataset.value = v;
-    chip.addEventListener('click', () => {
-      const set = ACTIVE_FILTERS.tags;
-      set.has(v) ? set.delete(v) : set.add(v);
-      chip.classList.toggle('active');
+  renderFilterOptions('tags', allTags);
+}
+
+function renderFilterOptions(key, values) {
+  const container = document.querySelector(`[data-filter-options="${key}"]`);
+  if (!container) return;
+  container.innerHTML = '';
+  if (!values.length) {
+    container.innerHTML = '<div class="filter-empty">No ' + key + '</div>';
+    updateFilterTrigger(key);
+    return;
+  }
+  for (const v of values) {
+    const opt = document.createElement('label');
+    opt.className = 'filter-option';
+    opt.dataset.value = v;
+    const checked = ACTIVE_FILTERS[key].has(v) ? 'checked' : '';
+    opt.innerHTML = `<input type="checkbox" ${checked} data-filter-value="${esc(v)}" /><span>${esc(v)}</span>`;
+    const cb = opt.querySelector('input');
+    cb.addEventListener('change', () => {
+      const set = ACTIVE_FILTERS[key];
+      cb.checked ? set.add(v) : set.delete(v);
+      updateFilterTrigger(key);
       render();
     });
-    tagContainer.appendChild(chip);
+    container.appendChild(opt);
   }
+  applyFilterSearch(key);
+  updateFilterTrigger(key);
+}
+
+function updateFilterTrigger(key) {
+  const trigger = document.querySelector(`[data-filter-trigger="${key}"]`);
+  const countEl = document.querySelector(`[data-filter-count="${key}"]`);
+  const n = ACTIVE_FILTERS[key].size;
+  if (n > 0) {
+    trigger.classList.add('active');
+    countEl.textContent = n;
+    countEl.style.display = '';
+  } else {
+    trigger.classList.remove('active');
+    countEl.style.display = 'none';
+  }
+}
+
+function applyFilterSearch(key) {
+  const search = document.querySelector(`[data-filter-search="${key}"]`);
+  const container = document.querySelector(`[data-filter-options="${key}"]`);
+  if (!search || !container) return;
+  const q = search.value.toLowerCase().trim();
+  container.querySelectorAll('.filter-option').forEach(opt => {
+    const match = !q || opt.dataset.value.toLowerCase().includes(q);
+    opt.classList.toggle('filtered', !match);
+  });
+}
+
+function setupFilterDropdowns() {
+  document.querySelectorAll('.filter-dropdown').forEach(dd => {
+    const key = dd.dataset.filter;
+    const trigger = dd.querySelector('.filter-trigger');
+    const menu = dd.querySelector('.filter-menu');
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasOpen = menu.classList.contains('open');
+      closeAllFilterMenus();
+      if (!wasOpen) {
+        menu.classList.add('open');
+        const search = menu.querySelector('.filter-search');
+        if (search) {
+          search.value = '';
+          applyFilterSearch(key);
+        }
+      }
+    });
+    const search = menu.querySelector('.filter-search');
+    if (search) {
+      search.addEventListener('input', () => applyFilterSearch(key));
+      search.addEventListener('click', (e) => e.stopPropagation());
+    }
+    menu.addEventListener('click', (e) => e.stopPropagation());
+    const clearBtn = menu.querySelector('.filter-clear');
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      ACTIVE_FILTERS[key].clear();
+      menu.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateFilterTrigger(key);
+      render();
+    });
+  });
+  document.addEventListener('click', closeAllFilterMenus);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllFilterMenus();
+  });
+}
+
+function closeAllFilterMenus() {
+  document.querySelectorAll('.filter-menu.open').forEach(m => m.classList.remove('open'));
 }
 
 function matchesFilters(item) {
