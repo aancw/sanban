@@ -1541,12 +1541,12 @@ function createCard(item) {
   card.querySelector('[data-action="check"]').addEventListener('click', async (e) => {
     e.stopPropagation();
     if (isDone) return;
-    const lastCol = CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
+    const doneCol = CURRENT_BOARD.columns.includes('done') ? 'done' : CURRENT_BOARD.columns[CURRENT_BOARD.columns.length - 1];
     const oldStatus = item.status;
-    await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'PATCH', body: { status: lastCol } });
-    item.status = lastCol;
+    await api(`/boards/${CURRENT_BOARD.id}/items/${item.id}`, { method: 'PATCH', body: { status: doneCol } });
+    item.status = doneCol;
     render();
-    pushUndo({ action: 'move', itemId: item.id, from: oldStatus, to: lastCol });
+    pushUndo({ action: 'move', itemId: item.id, from: oldStatus, to: doneCol });
     toast(`${item.id} -> done`);
   });
   // Subtask checkbox handlers
